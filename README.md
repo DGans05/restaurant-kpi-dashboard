@@ -52,6 +52,18 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
+### Artiforge (remote MCP)
+If you're connecting a remote Artiforge Model Context Protocol (MCP) service, add the following to `.env.local` (do not commit secrets):
+
+```env
+ARTIFORGE_API_URL=https://api.artiforge.example
+ARTIFORGE_API_KEY=your-artiforge-api-key
+```
+
+To test locally: run the dev server and open `http://localhost:3000/api/artiforge/ping` — it will return a JSON health-check response from the configured Artiforge endpoint.
+
+On Vercel: add `ARTIFORGE_API_URL` and `ARTIFORGE_API_KEY` in the Project > Settings > Environment Variables (mark the key as secret).
+
 ### 4. Run the development server
 
 ```bash
