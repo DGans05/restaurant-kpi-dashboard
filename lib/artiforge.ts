@@ -6,9 +6,19 @@ function requireEnv(name: string): string {
   return v;
 }
 
+function getEnv(name: string): string | undefined {
+  return process.env[name];
+}
+
 export async function pingArtiforge(): Promise<ArtiforgePing> {
-  const base = requireEnv('ARTIFORGE_API_URL').replace(/\/$/, '');
-  const key = requireEnv('ARTIFORGE_API_KEY');
+  const baseUrl = getEnv('ARTIFORGE_API_URL');
+  const key = getEnv('ARTIFORGE_API_KEY');
+  
+  if (!baseUrl || !key) {
+    return { error: 'Artiforge environment variables not configured. Set ARTIFORGE_API_URL and ARTIFORGE_API_KEY in your environment.' };
+  }
+  
+  const base = baseUrl.replace(/\/$/, '');
 
   // Try a conservative health endpoint; if your Artiforge provider uses a different path,
   // update this function to the correct path (e.g. `/v1/health` or `/status`).
@@ -32,8 +42,14 @@ export async function pingArtiforge(): Promise<ArtiforgePing> {
 }
 
 export async function callArtiforge(endpoint: string, body?: unknown, method = 'POST') {
-  const base = requireEnv('ARTIFORGE_API_URL').replace(/\/$/, '');
-  const key = requireEnv('ARTIFORGE_API_KEY');
+  const baseUrl = getEnv('ARTIFORGE_API_URL');
+  const key = getEnv('ARTIFORGE_API_KEY');
+  
+  if (!baseUrl || !key) {
+    throw new Error('Artiforge environment variables not configured. Set ARTIFORGE_API_URL and ARTIFORGE_API_KEY in your environment.');
+  }
+  
+  const base = baseUrl.replace(/\/$/, '');
 
   const res = await fetch(`${base}${endpoint}`, {
     method,
