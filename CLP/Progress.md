@@ -210,3 +210,68 @@ npm run nyp:capture-cookies  # Capture NYP cookies
 npm run db:create-user       # Create auth user
 npm run deploy              # Deploy to production
 ```
+
+---
+
+## ✅ E2E Testing Infrastructure Complete!
+
+### Playwright E2E Tests ✅
+- ✅ Installed @playwright/test framework
+- ✅ Created `playwright.config.ts` configuration
+- ✅ Set up test directory: `__tests__/e2e/`
+- ✅ Created comprehensive dashboard test suite
+- ✅ Added test scripts to package.json
+- ✅ Updated .gitignore for Playwright artifacts
+- ✅ Created .env.example for test credentials
+
+### Test Suites Created
+**`__tests__/e2e/dashboard.spec.ts`** — 11 test cases:
+
+1. **Authentication Flow**
+   - Redirect to login when not authenticated
+   - Login and navigate to dashboard
+
+2. **KPI Cards**
+   - Display all 5 KPI cards
+   - Show metric values
+
+3. **Period Selector**
+   - Toggle between week/month views
+   - Navigate to previous period
+   - Navigate to next period
+
+4. **Charts**
+   - Display revenue chart
+   - Display cost breakdown chart
+
+5. **Theme Toggle**
+   - Toggle between light/dark modes
+
+### Running E2E Tests
+```bash
+# Run all E2E tests (headless)
+npm run test:e2e
+
+# Run with UI mode (interactive)
+npm run test:e2e:ui
+
+# Run with browser visible
+npm run test:e2e:headed
+
+# Run with debugger
+npm run test:e2e:debug
+```
+
+### Configuration
+- **Base URL:** http://localhost:3000 (dev server)
+- **Browsers:** Chromium, Firefox, WebKit
+- **Parallel:** Tests run in parallel
+- **Retry:** 2 retries on CI
+- **Reporter:** HTML report (playwright-report/)
+
+### Test Credentials
+Set in `.env.local`:
+```bash
+TEST_USER_EMAIL=damian.gans@outlook.com
+TEST_USER_PASSWORD=your-password-here
+```
