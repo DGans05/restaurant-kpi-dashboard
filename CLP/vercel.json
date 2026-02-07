@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/refresh-cookies",
+      "schedule": "0 1 * * *"
+    },
+    {
       "path": "/api/cron/download-reports",
       "schedule": "0 2 * * *"
     }

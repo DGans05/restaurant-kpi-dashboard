@@ -65,6 +65,78 @@
 
 **Total: 33 tests, all passing** ✅
 
+---
+
+## ✅ Error Monitoring Setup Complete!
+
+### Sentry Integration ✅
+- ✅ Installed @sentry/nextjs package
+- ✅ Created Sentry configuration files:
+  - `sentry.client.config.ts` — Client-side error tracking
+  - `sentry.server.config.ts` — Server-side error tracking
+  - `sentry.edge.config.ts` — Edge runtime (middleware)
+- ✅ Updated `next.config.ts` with Sentry webpack plugin
+- ✅ Added `.sentryclirc` for CLI authentication
+- ✅ Updated `.gitignore` to exclude sensitive Sentry files
+- ✅ Created setup script: `scripts/setup-sentry.sh`
+- ✅ Added error tracking to cron job endpoint
+- ✅ Created documentation: `docs/SENTRY_SETUP.md`
+
+### Features Enabled
+- **Source Maps:** Automatically uploaded during build
+- **Session Replay:** 10% of sessions + 100% of error sessions
+- **Performance Monitoring:** 10% transaction sampling
+- **Vercel Cron Monitoring:** Automatic cron job tracking
+- **Privacy:** Text masking and media blocking enabled
+
+### Next Steps
+1. Create Sentry account at https://sentry.io
+2. Get DSN and Auth Token
+3. Run: `npm run sentry:setup` to configure Vercel
+4. Deploy and verify error tracking works
+
+See `docs/SENTRY_SETUP.md` for detailed instructions.
+
+---
+
+## ✅ Cookie Refresh Automation Complete!
+
+### Automated Cookie Refresh ✅
+- ✅ Created `/api/cron/refresh-cookies` endpoint
+- ✅ Integrated Playwright for automated NYP login
+- ✅ Added Sentry error tracking for failures
+- ✅ Scheduled cron: Daily at 1 AM UTC (before 6 AM report download)
+- ✅ Handles session expiration gracefully
+- ✅ Stores refreshed cookies in `nyp_sessions` table
+- ✅ 2FA detection with fallback to manual refresh
+
+### Features
+- **Headless Browser:** Uses Playwright chromium
+- **Smart Detection:** Detects and warns about 2FA requirement
+- **Error Capture:** All failures sent to Sentry
+- **Timeout Protection:** 2-minute max duration with proper cleanup
+- **Database Storage:** Automatically updates `nyp_sessions`
+
+### Cron Schedule
+- **1 AM UTC:** Cookie refresh (`/api/cron/refresh-cookies`)
+- **2 AM UTC:** Report download (`/api/cron/download-reports`)
+
+### Testing
+```bash
+# Test locally (requires dev server running)
+npm run nyp:refresh-cookies
+
+# Test in production
+curl -X GET https://nypkpi.com/api/cron/refresh-cookies \
+  -H "Authorization: Bearer nyp-kpi-cron-secret-2026"
+```
+
+### Fallback
+If 2FA is required or automation fails:
+```bash
+npm run nyp:capture-cookies  # Manual cookie capture with 2FA support
+```
+
 ## ✅ Parser Verified and Fixed!
 
 ### Parser Updates
