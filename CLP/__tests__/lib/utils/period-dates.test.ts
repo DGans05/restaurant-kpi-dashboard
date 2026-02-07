@@ -1,5 +1,18 @@
 import { describe, it, expect } from 'vitest'
-import { getCurrentWeek, getCurrentMonth, getPeriodDateRange } from '@/lib/utils/period-dates'
+import {
+  getCurrentWeek,
+  getCurrentMonth,
+  getPeriodDateRange,
+  getNextPeriod,
+  getPrevPeriod,
+  getPeriodLabel,
+  canGoPrev,
+  canGoNext,
+  getPreviousPeriodKey,
+  convertPeriodKey,
+  parseISOWeekString,
+  formatISOWeek,
+} from '@/lib/utils/period-dates'
 
 describe('period-dates', () => {
   describe('getCurrentWeek', () => {
@@ -91,6 +104,177 @@ describe('period-dates', () => {
       const monthResult = getPeriodDateRange('month', currentMonth)
       expect(monthResult.start).toBeInstanceOf(Date)
       expect(monthResult.end).toBeInstanceOf(Date)
+    })
+  })
+
+  describe('parseISOWeekString', () => {
+    it('should parse ISO week string to Monday of that week', () => {
+      const date = parseISOWeekString('2026-W01')
+      expect(date).toBeInstanceOf(Date)
+      expect(date.getDay()).toBe(1) // Monday
+    })
+
+    it('should handle different week numbers', () => {
+      const week10 = parseISOWeekString('2025-W10')
+      const week52 = parseISOWeekString('2025-W52')
+      expect(week10).toBeInstanceOf(Date)
+      expect(week52).toBeInstanceOf(Date)
+    })
+  })
+
+  describe('formatISOWeek', () => {
+    it('should format date to ISO week string', () => {
+      const date = new Date('2026-01-05') // Week 1 or 2 of 2026
+      const weekStr = formatISOWeek(date)
+      expect(weekStr).toMatch(/^2026-W\d{2}$/)
+    })
+
+    it('should pad week numbers with zero', () => {
+      const date = new Date('2026-01-05')
+      const weekStr = formatISOWeek(date)
+      expect(weekStr.split('-W')[1]).toHaveLength(2)
+    })
+  })
+
+  describe('getNextPeriod', () => {
+    it('should return next week for week view', () => {
+      const next = getNextPeriod('week', '2025-W10')
+      expect(next).toBe('2025-W11')
+    })
+
+    it('should return next month for month view', () => {
+      const next = getNextPeriod('month', '2025-02')
+      expect(next).toBe('2025-03')
+    })
+
+    it('should handle year boundary for weeks', () => {
+      const next = getNextPeriod('week', '2025-W52')
+      expect(next).toMatch(/^2026-W/)
+    })
+
+    it('should handle year boundary for months', () => {
+      const next = getNextPeriod('month', '2025-12')
+      expect(next).toBe('2026-01')
+    })
+  })
+
+  describe('getPrevPeriod', () => {
+    it('should return previous week for week view', () => {
+      const prev = getPrevPeriod('week', '2025-W10')
+      expect(prev).toBe('2025-W09')
+    })
+
+    it('should return previous month for month view', () => {
+      const prev = getPrevPeriod('month', '2025-02')
+      expect(prev).toBe('2025-01')
+    })
+
+    it('should handle year boundary for weeks', () => {
+      const prev = getPrevPeriod('week', '2026-W01')
+      expect(prev).toMatch(/^2025-W/)
+    })
+
+    it('should handle year boundary for months', () => {
+      const prev = getPrevPeriod('month', '2026-01')
+      expect(prev).toBe('2025-12')
+    })
+  })
+
+  describe('getPeriodLabel', () => {
+    it('should return week label in format "Week N, YYYY"', () => {
+      const label = getPeriodLabel('week', '2025-W10')
+      expect(label).toMatch(/^Week \d+, \d{4}$/)
+      expect(label).toContain('2025')
+    })
+
+    it('should return month label in Dutch with capitalized first letter', () => {
+      const label = getPeriodLabel('month', '2025-02')
+      // February in Dutch is "februari"
+      expect(label).toMatch(/^[A-Z]/) // First letter capitalized
+      expect(label).toContain('2025')
+    })
+
+    it('should handle different months correctly', () => {
+      const jan = getPeriodLabel('month', '2025-01')
+      const dec = getPeriodLabel('month', '2025-12')
+      expect(jan).toBeTruthy()
+      expect(dec).toBeTruthy()
+      expect(jan).not.toBe(dec)
+    })
+  })
+
+  describe('canGoPrev', () => {
+    it('should allow going back to September 2025 for months', () => {
+      expect(canGoPrev('month', '2025-10')).toBe(true)
+      expect(canGoPrev('month', '2025-09')).toBe(false) // At earliest month
+    })
+
+    it('should not allow going before September 2025 for months', () => {
+      expect(canGoPrev('month', '2025-09')).toBe(false)
+    })
+
+    it('should allow going back for weeks if date >= Sep 2025', () => {
+      // Week in October 2025
+      expect(canGoPrev('week', '2025-W40')).toBe(true)
+    })
+
+    it('should not allow going before earliest week', () => {
+      // First week of September 2025
+      expect(canGoPrev('week', '2025-W36')).toBe(false)
+    })
+  })
+
+  describe('canGoNext', () => {
+    it('should not allow going beyond current week', () => {
+      const currentWeek = getCurrentWeek()
+      expect(canGoNext('week', currentWeek)).toBe(false)
+    })
+
+    it('should allow going forward if before current week', () => {
+      expect(canGoNext('week', '2025-W01')).toBe(true)
+    })
+
+    it('should not allow going beyond current month', () => {
+      const currentMonth = getCurrentMonth()
+      expect(canGoNext('month', currentMonth)).toBe(false)
+    })
+
+    it('should allow going forward if before current month', () => {
+      expect(canGoNext('month', '2025-01')).toBe(true)
+    })
+  })
+
+  describe('getPreviousPeriodKey', () => {
+    it('should return previous period key for week', () => {
+      const prev = getPreviousPeriodKey('week', '2025-W10')
+      expect(prev).toBe('2025-W09')
+    })
+
+    it('should return previous period key for month', () => {
+      const prev = getPreviousPeriodKey('month', '2025-05')
+      expect(prev).toBe('2025-04')
+    })
+  })
+
+  describe('convertPeriodKey', () => {
+    it('should return same key when converting to same view', () => {
+      expect(convertPeriodKey('week', 'week', '2025-W10')).toBe('2025-W10')
+      expect(convertPeriodKey('month', 'month', '2025-05')).toBe('2025-05')
+    })
+
+    it('should convert week to month using the month of Monday', () => {
+      const monthKey = convertPeriodKey('week', 'month', '2025-W10')
+      expect(monthKey).toMatch(/^2025-\d{2}$/)
+    })
+
+    it('should convert month to week using ISO week of first day', () => {
+      const weekKey = convertPeriodKey('month', 'week', '2025-05')
+      expect(weekKey).toMatch(/^2025-W\d{2}$/)
+    })
+
+    it('should handle year boundary conversions', () => {
+      const monthKey = convertPeriodKey('week', 'month', '2026-W01')
+      expect(monthKey).toMatch(/^\d{4}-\d{2}$/)
     })
   })
 })
