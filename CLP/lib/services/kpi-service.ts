@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { addDays } from "date-fns";
+import { addDays, subDays } from "date-fns";
 import { getKPIRepository } from "@/lib/repositories";
 import type {
   KPIEntry,
@@ -7,6 +7,7 @@ import type {
   ChartDataPoint,
   DeliveryDataPoint,
   DeliverySummary,
+  PeriodComparison,
 } from "@/lib/types";
 
 /**
@@ -196,5 +197,49 @@ export const getDeliverySummary = cache(
       console.error("Failed to fetch delivery summary:", error);
       throw new Error("Unable to load delivery summary. Please try again.");
     }
+  }
+);
+
+/**
+ * Compute percentage changes between two periods.
+ * Revenue/orders/productivity use relative % change.
+ * Labour/food/prime cost use absolute percentage-point difference.
+ */
+export function computePeriodComparison(
+  current: KPISummary,
+  previous: KPISummary
+): PeriodComparison {
+  const pctChange = (curr: number, prev: number) =>
+    prev > 0 ? ((curr - prev) / prev) * 100 : 0;
+
+  return {
+    revenueChange: pctChange(current.totalNetRevenue, previous.totalNetRevenue),
+    labourChange: current.avgLabourPct - previous.avgLabourPct,
+    ordersChange: pctChange(current.totalOrders, previous.totalOrders),
+    productivityChange: pctChange(current.avgLabourProductivity, previous.avgLabourProductivity),
+    foodCostChange: current.avgFoodCostPct - previous.avgFoodCostPct,
+    primeCostChange: current.avgPrimeCostPct - previous.avgPrimeCostPct,
+  };
+}
+
+/**
+ * Get sparkline data (last 7 days ending at `end`).
+ */
+export const getSparklineData = cache(
+  async (end: Date, restaurantId?: string): Promise<{
+    revenue: number[];
+    labourPct: number[];
+    orders: number[];
+    productivity: number[];
+  }> => {
+    const start = subDays(end, 6);
+    const entries = await getKPIEntries(start, end, restaurantId);
+
+    return {
+      revenue: entries.map((e) => e.netRevenue),
+      labourPct: entries.map((e) => e.labourPct),
+      orders: entries.map((e) => e.orderCount),
+      productivity: entries.map((e) => e.labourProductivity),
+    };
   }
 );

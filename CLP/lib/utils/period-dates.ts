@@ -145,6 +145,13 @@ export function canGoNext(view: PeriodView, periodKey: string): boolean {
 }
 
 /**
+ * Get the previous period key (e.g. previous week or previous month).
+ */
+export function getPreviousPeriodKey(view: PeriodView, periodKey: string): string {
+  return getPrevPeriod(view, periodKey);
+}
+
+/**
  * When switching views, convert the current period key to the new view.
  * Week → Month: use the month that the week's Monday falls in.
  * Month → Week: use the ISO week of the first day of that month.

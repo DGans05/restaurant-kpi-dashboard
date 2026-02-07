@@ -47,7 +47,7 @@ export function LabourChart({ data }: LabourChartProps) {
           </p>
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={280}>
+      <ResponsiveContainer width="100%" height={280} className="touch-manipulation">
         <ComposedChart data={data}>
           {/* Threshold zones for labour % */}
           <ThresholdZone

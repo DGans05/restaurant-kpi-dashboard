@@ -4,10 +4,11 @@ import { TrendingDown, TrendingUp, CircleDollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatPct } from "@/lib/utils/formatters";
 import { cardStyles } from "@/lib/utils/styles";
-import type { KPISummary } from "@/lib/types";
+import type { KPISummary, PeriodComparison } from "@/lib/types";
 
 interface PrimeCostCardProps {
   summary: KPISummary;
+  comparison?: PeriodComparison;
   animationDelay: string;
 }
 
@@ -41,7 +42,38 @@ function getPrimeStatus(pct: number): {
   }
 }
 
-export function PrimeCostCard({ summary, animationDelay }: PrimeCostCardProps) {
+function ComparisonBadge({
+  value,
+  suffix = "%",
+  invert = false,
+  label = "vs vorig",
+}: {
+  value: number;
+  suffix?: string;
+  invert?: boolean;
+  label?: string;
+}) {
+  if (Math.abs(value) < 0.1) return null;
+  const isPositive = value > 0;
+  const isGood = invert ? !isPositive : isPositive;
+  const Icon = isPositive ? TrendingUp : TrendingDown;
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 text-[10px] font-medium",
+        isGood ? "text-[#009a44]" : "text-[#f3001d]"
+      )}
+    >
+      <Icon className="size-2.5" />
+      {isPositive ? "+" : ""}
+      {value.toFixed(1)}
+      {suffix} {label}
+    </span>
+  );
+}
+
+export function PrimeCostCard({ summary, comparison, animationDelay }: PrimeCostCardProps) {
   const { avgPrimeCostPct, avgFoodCostPct, avgLabourPct } = summary;
   const { status, label, icon: Icon } = getPrimeStatus(avgPrimeCostPct);
 
@@ -90,16 +122,32 @@ export function PrimeCostCard({ summary, animationDelay }: PrimeCostCardProps) {
         </span>
       </div>
 
+      {comparison && comparison.primeCostChange !== undefined && (
+        <div className="mt-1 mb-3">
+          <ComparisonBadge value={comparison.primeCostChange} suffix=" pp" invert />
+        </div>
+      )}
+
       {/* Breakdown */}
       <div className="space-y-2 pt-3 border-t border-border/50">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Food Cost:</span>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Food Cost:</span>
+            {comparison && comparison.foodCostChange !== undefined && (
+              <ComparisonBadge value={comparison.foodCostChange} suffix=" pp" invert />
+            )}
+          </div>
           <span className="font-semibold tabular-nums">
             {formatPct(avgFoodCostPct)}
           </span>
         </div>
         <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Arbeidskosten:</span>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Arbeidskosten:</span>
+            {comparison && comparison.labourChange !== undefined && (
+              <ComparisonBadge value={comparison.labourChange} suffix=" pp" invert />
+            )}
+          </div>
           <span className="font-semibold tabular-nums">
             {formatPct(avgLabourPct)}
           </span>

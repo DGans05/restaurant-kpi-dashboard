@@ -1,10 +1,40 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Search, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+function getInitials(email: string): string {
+  const localPart = email.split("@")[0] ?? "";
+  return localPart.slice(0, 2).toUpperCase();
+}
+
 export function Header() {
+  const router = useRouter();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserEmail(user.email ?? null);
+    });
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  };
+
+  const initials = userEmail ? getInitials(userEmail) : "??";
+  const displayName = userEmail
+    ? userEmail.split("@")[0] ?? userEmail
+    : "Loading...";
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background px-4 md:px-8">
       {/* Left: Page title / Greeting */}
@@ -29,11 +59,14 @@ export function Header() {
         <Button
           variant="ghost"
           className="hidden md:flex items-center gap-2 px-3 py-2 h-auto rounded-xl"
+          onClick={handleLogout}
         >
           <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-xs font-semibold text-white">
-            AM
+            {initials}
           </div>
-          <span className="text-sm font-medium text-foreground">Aiden Max</span>
+          <span className="text-sm font-medium text-foreground max-w-[120px] truncate">
+            {displayName}
+          </span>
           <ChevronDown className="size-4 text-muted-foreground" />
         </Button>
         <ThemeToggle />

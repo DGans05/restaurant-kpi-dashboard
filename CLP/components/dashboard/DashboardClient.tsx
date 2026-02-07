@@ -7,12 +7,15 @@ import { LabourChart } from "@/components/dashboard/CostBreakdownChart";
 import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
 import { RestaurantFilter } from "@/components/dashboard/RestaurantFilter";
 import { DeliveryPerformance } from "@/components/dashboard/DeliveryPerformance";
+import { ExportButton } from "@/components/dashboard/ExportButton";
 import type {
   KPISummary,
   ChartDataPoint,
   DeliverySummary,
   PeriodView,
   Restaurant,
+  PeriodComparison,
+  KPISparklines,
 } from "@/lib/types";
 
 interface DashboardClientProps {
@@ -23,6 +26,10 @@ interface DashboardClientProps {
   periodKey: string;
   restaurants: Restaurant[];
   currentRestaurantId?: string;
+  comparison?: PeriodComparison;
+  sparklines?: KPISparklines;
+  startDate: string;
+  endDate: string;
 }
 
 export function DashboardClient({
@@ -33,6 +40,10 @@ export function DashboardClient({
   periodKey,
   restaurants,
   currentRestaurantId,
+  comparison,
+  sparklines,
+  startDate,
+  endDate,
 }: DashboardClientProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -70,6 +81,11 @@ export function DashboardClient({
             restaurants={restaurants}
             currentRestaurantId={currentRestaurantId}
           />
+          <ExportButton
+            startDate={startDate}
+            endDate={endDate}
+            restaurantId={currentRestaurantId}
+          />
           <PeriodSelector
             view={view}
             periodKey={periodKey}
@@ -79,7 +95,7 @@ export function DashboardClient({
       </div>
 
       {/* KPI Cards */}
-      <KPISummaryCards summary={summary} />
+      <KPISummaryCards summary={summary} comparison={comparison} sparklines={sparklines} />
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">

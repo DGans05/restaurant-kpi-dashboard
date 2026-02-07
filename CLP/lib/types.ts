@@ -186,3 +186,41 @@ export interface ReportTypeMetadata {
   fileType: 'excel' | 'pdf' | 'both';
   nypUrl?: string;
 }
+
+export interface KPISparklines {
+  revenue: number[];
+  labourPct: number[];
+  orders: number[];
+  productivity: number[];
+}
+
+export interface PeriodComparison {
+  revenueChange: number;
+  labourChange: number;
+  ordersChange: number;
+  productivityChange: number;
+  foodCostChange: number;
+  primeCostChange: number;
+}
+
+export interface Target {
+  id: string;
+  restaurantId: string;
+  metric: string;
+  targetValue: number;
+  warningThreshold: number | null;
+  dangerThreshold: number | null;
+  periodType: 'daily' | 'weekly' | 'monthly';
+}
+
+export type UserRole = 'owner' | 'manager' | 'viewer'
+
+export interface UserProfile {
+  id: string
+  userId: string
+  restaurantId: string
+  role: UserRole
+  displayName: string | null
+  createdAt: Date
+  updatedAt: Date
+}

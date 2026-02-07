@@ -161,3 +161,30 @@ export const CreateReportDtoSchema = z.object({
   filePath: z.string().optional(),
   fileSizeBytes: z.number().int().positive().optional(),
 });
+
+export const TargetSchema = z.object({
+  id: z.string().uuid(),
+  restaurantId: z.string(),
+  metric: z.string(),
+  targetValue: z.number(),
+  warningThreshold: z.number().nullable(),
+  dangerThreshold: z.number().nullable(),
+  periodType: z.enum(['daily', 'weekly', 'monthly']),
+});
+
+export const UserRoleSchema = z.enum(['owner', 'manager', 'viewer'])
+
+export const LoginSchema = z.object({
+  email: z.string().email('Ongeldig e-mailadres'),
+  password: z.string().min(6, 'Wachtwoord moet minimaal 6 tekens bevatten'),
+})
+
+export const UserProfileSchema = z.object({
+  id: z.string().uuid(),
+  userId: z.string().uuid(),
+  restaurantId: z.string(),
+  role: UserRoleSchema,
+  displayName: z.string().nullable(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})

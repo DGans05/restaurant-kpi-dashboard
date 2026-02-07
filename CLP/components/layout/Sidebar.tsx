@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import {
   LayoutDashboard,
   Menu,
@@ -10,6 +11,7 @@ import {
   Flame,
   Store,
   FileBarChart,
+  PenSquare,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -20,12 +22,21 @@ const menuItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Restaurants", href: "/restaurants", icon: Store },
   { label: "Reports", href: "/reports", icon: FileBarChart },
+  { label: "KPI Invoer", href: "/kpis/new", icon: PenSquare },
   { label: "Settings", href: "#", icon: Settings, disabled: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <>
@@ -116,13 +127,14 @@ export function Sidebar() {
 
         {/* Footer with Logout */}
         <div className="border-t border-sidebar-border px-3 py-4 space-y-3">
-          <Link
-            href="#"
-            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-primary hover:bg-sidebar-accent transition-all duration-200"
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-primary hover:bg-sidebar-accent transition-all duration-200"
           >
             <LogOut className="size-[18px]" />
             Logout
-          </Link>
+          </button>
         </div>
       </aside>
     </>

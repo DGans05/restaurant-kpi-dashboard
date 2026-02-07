@@ -47,7 +47,7 @@ export function PeriodSelector({
             key={opt.value}
             onClick={() => handleViewChange(opt.value)}
             className={cn(
-              "rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200",
+              "rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 touch-manipulation",
               view === opt.value
                 ? "bg-primary text-white shadow-[0_4px_8px_rgba(0,154,68,0.2)]"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
@@ -64,14 +64,14 @@ export function PeriodSelector({
           onClick={() => onChange(view, getPrevPeriod(view, periodKey))}
           disabled={prevDisabled}
           className={cn(
-            "rounded-lg p-1.5 transition-colors",
+            "flex items-center justify-center rounded-lg min-w-[44px] min-h-[44px] p-2.5 transition-colors touch-manipulation",
             prevDisabled
               ? "cursor-not-allowed text-muted-foreground/40"
               : "text-muted-foreground hover:bg-secondary hover:text-foreground"
           )}
           aria-label="Vorige periode"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-5 w-5" />
         </button>
 
         <span className="min-w-[140px] text-center text-sm font-medium text-foreground">
@@ -82,14 +82,14 @@ export function PeriodSelector({
           onClick={() => onChange(view, getNextPeriod(view, periodKey))}
           disabled={nextDisabled}
           className={cn(
-            "rounded-lg p-1.5 transition-colors",
+            "flex items-center justify-center rounded-lg min-w-[44px] min-h-[44px] p-2.5 transition-colors touch-manipulation",
             nextDisabled
               ? "cursor-not-allowed text-muted-foreground/40"
               : "text-muted-foreground hover:bg-secondary hover:text-foreground"
           )}
           aria-label="Volgende periode"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-5 w-5" />
         </button>
       </div>
     </div>

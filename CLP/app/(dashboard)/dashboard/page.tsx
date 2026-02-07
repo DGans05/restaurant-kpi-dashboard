@@ -3,6 +3,8 @@ import {
   getKPISummary,
   getChartData,
   getDeliverySummary,
+  computePeriodComparison,
+  getSparklineData,
 } from "@/lib/services/kpi-service";
 import { getAllRestaurants } from "@/lib/services/restaurant-service";
 import { PeriodViewSchema, ISOWeekSchema, ISOMonthSchema } from "@/lib/schemas";
@@ -11,6 +13,7 @@ import {
   getCurrentWeek,
   getCurrentMonth,
   getPeriodDateRange,
+  getPreviousPeriodKey,
 } from "@/lib/utils/period-dates";
 import type { PeriodView } from "@/lib/types";
 
@@ -46,14 +49,22 @@ export default async function DashboardPage({
 
   const restaurantId = z.string().min(1).optional().parse(params.restaurantId || undefined);
 
+  // Compute previous period for comparison
+  const prevPeriodKey = getPreviousPeriodKey(view, periodKey);
+  const { start: prevStart, end: prevEnd } = getPeriodDateRange(view, prevPeriodKey);
+
   // Server-side data fetching (parallel)
-  const [summary, chartData, deliverySummary, restaurants] =
+  const [summary, chartData, deliverySummary, restaurants, prevSummary, sparklines] =
     await Promise.all([
       getKPISummary(start, end, restaurantId),
       getChartData(start, end, restaurantId),
       getDeliverySummary(start, end, restaurantId),
       getAllRestaurants(),
+      getKPISummary(prevStart, prevEnd, restaurantId),
+      getSparklineData(end, restaurantId),
     ]);
+
+  const comparison = computePeriodComparison(summary, prevSummary);
 
   return (
     <DashboardClient
@@ -64,6 +75,10 @@ export default async function DashboardPage({
       periodKey={periodKey}
       restaurants={restaurants}
       currentRestaurantId={restaurantId}
+      comparison={comparison}
+      sparklines={sparklines}
+      startDate={start.toISOString().split("T")[0]}
+      endDate={end.toISOString().split("T")[0]}
     />
   );
 }

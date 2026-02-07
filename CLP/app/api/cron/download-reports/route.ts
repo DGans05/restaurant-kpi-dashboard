@@ -1,0 +1,167 @@
+import { NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin-client";
+import { NYPApiClient, SessionExpiredError } from "@/lib/services/nyp-api-client";
+import { getReportTypeConfig } from "@/lib/config/report-types";
+import { parseOperationalReport } from "@/lib/parsers/operational-report-parser";
+import { subDays, format } from "date-fns";
+import type { NypCookies } from "@/lib/types/nyp-types";
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
+export async function GET(request: Request) {
+  try {
+    const authHeader = request.headers.get("authorization");
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const supabase = createAdminClient();
+    const restaurantId = "rosmalen";
+
+    let cookies: NypCookies;
+    const { data: session } = await supabase
+      .from("nyp_sessions")
+      .select("cookies_json")
+      .eq("restaurant_id", restaurantId)
+      .eq("is_active", true)
+      .single();
+
+    if (session?.cookies_json) {
+      cookies = JSON.parse(session.cookies_json);
+    } else if (process.env.NYP_COOKIES_JSON) {
+      cookies = JSON.parse(process.env.NYP_COOKIES_JSON);
+    } else {
+      return NextResponse.json(
+        { error: "No NYP cookies configured" },
+        { status: 500 }
+      );
+    }
+
+    const client = new NYPApiClient(cookies);
+    const isValid = await client.isSessionValid();
+
+    if (!isValid) {
+      if (session) {
+        await supabase
+          .from("nyp_sessions")
+          .update({ is_active: false })
+          .eq("restaurant_id", restaurantId);
+      }
+      return NextResponse.json(
+        {
+          error: "NYP session expired",
+          action: "Please refresh cookies via /api/nyp/refresh-session",
+        },
+        { status: 401 }
+      );
+    }
+
+    const yesterday = subDays(new Date(), 1);
+    const reportMeta = getReportTypeConfig("OPERATIONAL");
+
+    const response = await client.generateReport(
+      reportMeta,
+      yesterday,
+      yesterday
+    );
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: `Failed to download report: HTTP ${response.status}` },
+        { status: 502 }
+      );
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const entries = parseOperationalReport(buffer);
+
+    if (entries.length === 0) {
+      return NextResponse.json({
+        warning: "No entries parsed from report",
+        date: format(yesterday, "yyyy-MM-dd"),
+      });
+    }
+
+    const kpiRows = entries.map((entry) => ({
+      restaurant_id: restaurantId,
+      date: entry.date,
+      day_name: entry.dayName,
+      week_number: entry.weekNumber,
+      planned_revenue: entry.plannedRevenue,
+      gross_revenue: entry.grossRevenue,
+      net_revenue: entry.netRevenue,
+      planned_labour_cost: entry.plannedLabourCost,
+      labour_cost: entry.labourCost,
+      planned_labour_pct: entry.plannedLabourPct,
+      labour_pct: entry.labourPct,
+      worked_hours: entry.workedHours,
+      labour_productivity: entry.labourProductivity,
+      food_cost: entry.foodCost,
+      food_cost_pct: entry.foodCostPct,
+      delivery_rate_30min: entry.deliveryRate30min,
+      on_time_delivery_mins: entry.onTimeDeliveryMins,
+      make_time_mins: entry.makeTimeMins,
+      drive_time_mins: entry.driveTimeMins,
+      order_count: entry.orderCount,
+      avg_order_value: entry.avgOrderValue,
+      orders_per_run: entry.ordersPerRun,
+      cash_difference: entry.cashDifference,
+      manager: entry.manager,
+    }));
+
+    const { error: upsertError } = await supabase
+      .from("kpi_entries")
+      .upsert(kpiRows, { onConflict: "restaurant_id,date" });
+
+    if (upsertError) {
+      return NextResponse.json(
+        { error: `Failed to upsert: ${upsertError.message}` },
+        { status: 500 }
+      );
+    }
+
+    const dateStr = format(yesterday, "yyyy-MM-dd");
+    const storagePath = `${restaurantId}/OPERATIONAL/${format(yesterday, "yyyy")}/${format(yesterday, "MM")}/OPERATIONAL_${dateStr}.xlsx`;
+
+    await supabase.storage.from("reports").upload(storagePath, buffer, {
+      contentType:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      upsert: true,
+    });
+
+    await supabase.from("reports").upsert(
+      {
+        restaurant_id: restaurantId,
+        report_type: "OPERATIONAL",
+        report_name: reportMeta.name,
+        report_period: dateStr,
+        file_path: storagePath,
+        file_size_bytes: buffer.length,
+        upload_status: "parsed",
+        parsed_at: new Date().toISOString(),
+      },
+      { onConflict: "restaurant_id,report_type,report_period" }
+    );
+
+    return NextResponse.json({
+      success: true,
+      date: dateStr,
+      entriesUpserted: entries.length,
+      storagePath,
+    });
+  } catch (error) {
+    if (error instanceof SessionExpiredError) {
+      return NextResponse.json(
+        { error: "NYP session expired" },
+        { status: 401 }
+      );
+    }
+    console.error("Cron download-reports error:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
+  }
+}

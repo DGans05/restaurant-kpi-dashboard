@@ -42,7 +42,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
           </p>
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={280}>
+      <ResponsiveContainer width="100%" height={280} className="touch-manipulation">
         <ComposedChart data={data}>
           <CartesianGrid
             strokeDasharray="3 3"

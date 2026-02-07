@@ -12,8 +12,9 @@ import {
 import { cn } from "@/lib/utils";
 import { formatEUR, formatEURWithCents, formatPct, formatNumber } from "@/lib/utils/formatters";
 import { cardStyles } from "@/lib/utils/styles";
-import type { KPISummary } from "@/lib/types";
+import type { KPISummary, PeriodComparison, KPISparklines } from "@/lib/types";
 import { PrimeCostCard } from "./PrimeCostCard";
+import { MetricSparkline } from "./MetricSparkline";
 
 /**
  * VarianceBadge shows plan-vs-actual variance with threshold-based coloring
@@ -25,6 +26,37 @@ import { PrimeCostCard } from "./PrimeCostCard";
  * - Warning (yellow): 2-5% variance
  * - Danger (red): > 5% variance
  */
+function ComparisonBadge({
+  value,
+  suffix = "%",
+  invert = false,
+  label = "vs vorig",
+}: {
+  value: number;
+  suffix?: string;
+  invert?: boolean;
+  label?: string;
+}) {
+  if (Math.abs(value) < 0.1) return null;
+  const isPositive = value > 0;
+  const isGood = invert ? !isPositive : isPositive;
+  const Icon = isPositive ? TrendingUp : TrendingDown;
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 text-[10px] font-medium",
+        isGood ? "text-[#009a44]" : "text-[#f3001d]"
+      )}
+    >
+      <Icon className="size-2.5" />
+      {isPositive ? "+" : ""}
+      {value.toFixed(1)}
+      {suffix} {label}
+    </span>
+  );
+}
+
 function VarianceBadge({
   value,
   invert = false,
@@ -78,6 +110,8 @@ function VarianceBadge({
 
 interface KPISummaryCardsProps {
   summary: KPISummary;
+  comparison?: PeriodComparison;
+  sparklines?: KPISparklines;
 }
 
 const cardMeta = [
@@ -109,13 +143,19 @@ const cardMeta = [
   },
 ] as const;
 
-export function KPISummaryCards({ summary }: KPISummaryCardsProps) {
+export function KPISummaryCards({ summary, comparison, sparklines }: KPISummaryCardsProps) {
   const cards = [
     {
       ...cardMeta[0],
       value: formatEUR(summary.totalNetRevenue),
       variance: <VarianceBadge value={summary.revenueVariance} suffix="%" />,
       note: `Plan: ${formatEUR(summary.totalPlannedRevenue)}`,
+      sparklineData: sparklines?.revenue,
+      sparklineColor: "#009a44",
+      sparklinePositive: true,
+      comparisonValue: comparison?.revenueChange,
+      comparisonSuffix: "%",
+      comparisonInvert: false,
     },
     {
       ...cardMeta[1],
@@ -128,18 +168,36 @@ export function KPISummaryCards({ summary }: KPISummaryCardsProps) {
         />
       ),
       note: `Plan: ${formatPct(summary.avgPlannedLabourPct)}`,
+      sparklineData: sparklines?.labourPct,
+      sparklineColor: "#ffa51d",
+      sparklinePositive: false,
+      comparisonValue: comparison?.labourChange,
+      comparisonSuffix: " pp",
+      comparisonInvert: true,
     },
     {
       ...cardMeta[2],
       value: formatNumber(summary.totalOrders),
       variance: null,
       note: `Gem. ${formatEURWithCents(summary.avgOrderValue)}/bestelling`,
+      sparklineData: sparklines?.orders,
+      sparklineColor: "#006dec",
+      sparklinePositive: true,
+      comparisonValue: comparison?.ordersChange,
+      comparisonSuffix: "%",
+      comparisonInvert: false,
     },
     {
       ...cardMeta[3],
       value: formatEURWithCents(summary.avgLabourProductivity),
       variance: null,
       note: "Netto omzet per uur",
+      sparklineData: sparklines?.productivity,
+      sparklineColor: "#ffc814",
+      sparklinePositive: true,
+      comparisonValue: comparison?.productivityChange,
+      comparisonSuffix: "%",
+      comparisonInvert: false,
     },
   ];
 
@@ -172,15 +230,34 @@ export function KPISummaryCards({ summary }: KPISummaryCardsProps) {
             {card.value}
           </p>
 
+          {card.sparklineData && card.sparklineData.length > 1 && (
+            <div className="mb-2">
+              <MetricSparkline
+                data={card.sparklineData}
+                color={card.sparklineColor}
+                positive={card.sparklinePositive}
+              />
+            </div>
+          )}
+
           <div className="flex items-center gap-2">
             {card.variance}
             <span className="text-xs text-muted-foreground">{card.note}</span>
           </div>
+          {comparison && card.comparisonValue !== undefined && (
+            <div className="mt-1">
+              <ComparisonBadge
+                value={card.comparisonValue}
+                suffix={card.comparisonSuffix}
+                invert={card.comparisonInvert}
+              />
+            </div>
+          )}
         </div>
       ))}
 
       {/* Prime Cost Card - 5th KPI */}
-      <PrimeCostCard summary={summary} animationDelay="stagger-5" />
+      <PrimeCostCard summary={summary} comparison={comparison} animationDelay="stagger-5" />
     </div>
   );
 }
