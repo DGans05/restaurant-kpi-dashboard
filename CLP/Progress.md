@@ -137,6 +137,48 @@ If 2FA is required or automation fails:
 npm run nyp:capture-cookies  # Manual cookie capture with 2FA support
 ```
 
+---
+
+## ✅ Trend Sparklines Feature Verified!
+
+### Status: Already Implemented ✅
+
+The trend sparklines feature is **fully functional** and just needs data:
+
+**Implementation Chain:**
+1. ✅ `getSparklineData()` in `lib/services/kpi-service.ts`
+   - Fetches last 7 days of data ending at selected period
+   - Returns: revenue, labourPct, orders, productivity arrays
+
+2. ✅ Dashboard page (`app/(dashboard)/dashboard/page.tsx`)
+   - Calls `getSparklineData(end, restaurantId)` in parallel
+   - Passes sparklines to DashboardClient
+
+3. ✅ DashboardClient component
+   - Receives sparklines prop
+   - Passes to KPISummaryCards
+
+4. ✅ KPISummaryCards component
+   - Renders MetricSparkline for each card
+   - Shows only if `sparklineData.length > 1`
+
+5. ✅ MetricSparkline component
+   - 7-day trend visualization
+   - Color-coded (green/red based on direction)
+   - Smooth line animation (800ms ease-in-out)
+   - 30px height, 60px width
+   - Opacity transition on hover
+
+**Requirements:**
+- Minimum 2 data points to display
+- Will automatically appear once cron job populates KPI data
+
+**Colors by Metric:**
+- Revenue: `#009a44` (green, up is good)
+- Labour %: `#ffa51d` (orange, down is good)
+- Orders: `#006dec` (blue, up is good)
+- Productivity: `#ffc814` (yellow, up is good)
+
 ## ✅ Parser Verified and Fixed!
 
 ### Parser Updates
