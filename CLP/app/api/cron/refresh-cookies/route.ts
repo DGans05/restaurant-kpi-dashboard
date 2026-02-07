@@ -3,6 +3,7 @@ import { timingSafeEqual } from "crypto";
 import * as Sentry from "@sentry/nextjs";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { chromium } from "playwright";
+import { rateLimit, getRateLimitHeaders } from "@/lib/utils/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120; // 2 minutes for Playwright automation
@@ -36,6 +37,23 @@ export async function GET(request: Request) {
 
     if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limiting: 3 requests per hour (expensive operation with Playwright)
+    const rateLimitResult = rateLimit({
+      identifier: "cron:refresh-cookies",
+      limit: 3,
+      windowMs: 60 * 60_000, // 1 hour
+    });
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
     }
 
     // Verify credentials are configured

@@ -35,6 +35,25 @@ Last commit: `1f05dbb chore: prepare for Vercel deployment`
 - [x] `app/kpis/new/page.tsx` — manual KPI entry form
 - [x] Build passes cleanly
 
+### Phase 5: Security & Production Hardening ✅
+- [x] Sentry error monitoring — client/server/edge runtime tracking
+- [x] Security review — 11 vulnerabilities fixed (CRITICAL, HIGH, MEDIUM, LOW)
+- [x] Security headers — X-Frame-Options, CSP, X-Content-Type-Options, Referrer-Policy
+- [x] Rate limiting — in-memory limiter for all sensitive endpoints
+  - CSV export: 10 requests/minute per user
+  - Download reports cron: 5 requests/minute
+  - Cookie refresh cron: 3 requests/hour
+- [x] CSV injection protection — sanitizeCSVValue function
+- [x] Timing-safe authentication — crypto.timingSafeEqual for cron endpoints
+- [x] Generic error messages — no sensitive data leakage
+- [x] Database indexes — 11 strategic indexes for 10-100x query speedup
+
+### Phase 6: Testing ✅
+- [x] Unit tests — 80 tests, 82.46% coverage
+- [x] E2E tests — 11 Playwright tests for critical user flows
+- [x] Parser edge case tests
+- [x] API route tests
+
 ---
 
 ## Remaining Work (not yet done)

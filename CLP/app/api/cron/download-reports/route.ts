@@ -6,6 +6,7 @@ import { NYPApiClient, SessionExpiredError } from "@/lib/services/nyp-api-client
 import { getReportTypeConfig } from "@/lib/config/report-types";
 import { parseOperationalReport } from "@/lib/parsers/operational-report-parser";
 import { subDays, format } from "date-fns";
+import { rateLimit, getRateLimitHeaders } from "@/lib/utils/rate-limit";
 import type { NypCookies } from "@/lib/types/nyp-types";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,23 @@ export async function GET(request: Request) {
 
     if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limiting: 5 requests per minute (prevents abuse if secret is compromised)
+    const rateLimitResult = rateLimit({
+      identifier: "cron:download-reports",
+      limit: 5,
+      windowMs: 60_000,
+    });
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
     }
 
     const supabase = createAdminClient();

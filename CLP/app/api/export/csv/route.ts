@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
+import { rateLimit, getRateLimitHeaders } from "@/lib/utils/rate-limit";
 
 const ExportParamsSchema = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -35,6 +36,26 @@ export async function GET(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limiting: 10 exports per minute per user
+    const rateLimitResult = rateLimit({
+      identifier: `csv-export:${user.id}`,
+      limit: 10,
+      windowMs: 60_000, // 1 minute
+    });
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: "Too many export requests",
+          resetAt: rateLimitResult.resetAt,
+        },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
     }
 
     const url = new URL(request.url);
