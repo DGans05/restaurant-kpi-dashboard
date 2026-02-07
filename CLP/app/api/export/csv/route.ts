@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
@@ -100,6 +101,17 @@ export async function GET(request: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues }, { status: 400 });
     }
+
+    // Capture unexpected errors in Sentry
+    Sentry.captureException(error, {
+      tags: {
+        component: "csv-export",
+      },
+      extra: {
+        url: request.url,
+      },
+    });
+
     console.error("CSV export error:", error);
     return NextResponse.json({
       error: error instanceof Error ? error.message : "Unknown error"

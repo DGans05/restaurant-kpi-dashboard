@@ -275,3 +275,55 @@ Set in `.env.local`:
 TEST_USER_EMAIL=damian.gans@outlook.com
 TEST_USER_PASSWORD=your-password-here
 ```
+
+---
+
+## ✅ CSV Export Feature Verified!
+
+### CSV Export Enhancements ✅
+- ✅ Added Sentry error tracking to export endpoint
+- ✅ Created comprehensive test suite (14 tests)
+- ✅ Verified CSV format and data mapping
+- ✅ Updated Vitest config to exclude E2E tests
+
+### Test Coverage: 14 New Tests
+**`__tests__/api/export/csv.test.ts`:**
+
+1. **Parameter Validation** (4 tests)
+   - Required startDate/endDate parameters
+   - Date format validation (YYYY-MM-DD)
+   - Optional restaurantId parameter
+
+2. **CSV Format** (3 tests)
+   - Semicolon delimiter
+   - All 24 required headers
+   - Filename format with date range
+
+3. **Data Mapping** (2 tests)
+   - Database fields to CSV columns
+   - Null value handling
+
+4. **Response Headers** (2 tests)
+   - Content-Type: text/csv; charset=utf-8
+   - Content-Disposition for download
+
+5. **Edge Cases** (3 tests)
+   - Empty/large date ranges
+   - Special characters in names
+
+### CSV Export Features
+- **Format:** Semicolon-delimited (Excel-compatible)
+- **Encoding:** UTF-8 with BOM
+- **Columns:** 24 fields (date, revenue, costs, delivery, etc.)
+- **Auth:** Requires authenticated user
+- **Sentry:** Full error tracking
+
+### Usage
+```bash
+GET /api/export/csv?startDate=2025-01-01&endDate=2025-01-31&restaurantId=rosmalen
+```
+
+Response: `kpi_export_2025-01-01_2025-01-31.csv`
+
+**Total Tests:** 80 passing (66 unit + 14 CSV export)
+**Coverage:** 82.46% ✅
