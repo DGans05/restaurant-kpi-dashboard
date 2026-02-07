@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import * as Sentry from "@sentry/nextjs";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { chromium } from "playwright";
@@ -22,9 +23,18 @@ export async function GET(request: Request) {
   const startTime = Date.now();
 
   try {
-    // Verify cron secret
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    // Validate CRON_SECRET is configured
+    if (!process.env.CRON_SECRET) {
+      Sentry.captureMessage("CRON_SECRET not configured", { level: "error" });
+      return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+    }
+
+    // Timing-safe comparison to prevent timing attacks
+    const authHeader = request.headers.get("authorization") || "";
+    const expected = Buffer.from(`Bearer ${process.env.CRON_SECRET}`);
+    const actual = Buffer.from(authHeader);
+
+    if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -41,7 +51,7 @@ export async function GET(request: Request) {
       );
     }
 
-    console.log("🔄 Starting cookie refresh...");
+    // Removed: console.log("🔄 Starting cookie refresh...");
 
     // Launch Playwright browser
     const browser = await chromium.launch({
@@ -58,14 +68,14 @@ export async function GET(request: Request) {
 
     try {
       // Navigate to NYP login page
-      console.log("   Navigating to NYP login...");
+      // Removed: console.log("   Navigating to NYP login...");
       await page.goto("https://service.newyorkpizza.nl/Account/SignIn", {
         waitUntil: "networkidle",
         timeout: 30000,
       });
 
       // Fill login form
-      console.log("   Finding login form...");
+      // Removed: console.log("   Finding login form...");
       const emailInput = page.locator('input[type="text"]:visible, input[type="email"]:visible').first();
       const passwordInput = page.locator('input[type="password"]:visible').first();
       const submitButton = page.locator('button:has-text("Inloggen"), input[type="submit"][value*="Log"]').first();
@@ -73,11 +83,11 @@ export async function GET(request: Request) {
       await emailInput.fill(NYP_USERNAME);
       await passwordInput.fill(NYP_PASSWORD);
 
-      console.log("   Submitting login form...");
+      // Removed: console.log("   Submitting login form...");
 
       // Click submit and handle potential 2FA redirect
       await submitButton.click({ timeout: 5000 }).catch(() => {
-        console.log("   Click initiated (navigation pending)...");
+        // Removed: console.log("   Click initiated (navigation pending)...");
       });
 
       // Wait for navigation
@@ -86,7 +96,7 @@ export async function GET(request: Request) {
 
       // Check if 2FA is required
       if (url.includes("VerifyLogin") || url.includes("verify") || url.includes("2fa")) {
-        console.log("⚠️  2FA detected - cookie refresh requires manual intervention");
+        // Removed: console.log("⚠️  2FA detected - cookie refresh requires manual intervention");
 
         Sentry.captureMessage("Cookie refresh blocked by 2FA", {
           level: "warning",
@@ -106,7 +116,7 @@ export async function GET(request: Request) {
         throw new Error("Login failed - still on login page");
       }
 
-      console.log("   ✓ Login successful");
+      // Removed: console.log("   ✓ Login successful");
 
       // Extract session cookies
       const cookies = await context.cookies();
@@ -122,7 +132,7 @@ export async function GET(request: Request) {
         throw new Error("No session cookies found after login");
       }
 
-      console.log(`   ✓ Captured ${nypCookies.length} cookies`);
+      // Removed: console.log(`   ✓ Captured ${nypCookies.length} cookies`);
 
       // Convert to storage format
       const cookiesJson: Record<string, string> = {};
@@ -148,7 +158,7 @@ export async function GET(request: Request) {
         throw new Error(`Failed to store cookies: ${upsertError.message}`);
       }
 
-      console.log("   ✓ Cookies stored in database");
+      // Removed: console.log("   ✓ Cookies stored in database");
 
       await browser.close();
 
@@ -182,7 +192,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: "Internal server error",
         durationMs: duration,
       },
       { status: 500 }

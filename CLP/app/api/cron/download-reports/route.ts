@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import * as Sentry from "@sentry/nextjs";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { NYPApiClient, SessionExpiredError } from "@/lib/services/nyp-api-client";
@@ -12,8 +13,18 @@ export const maxDuration = 60;
 
 export async function GET(request: Request) {
   try {
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    // Validate CRON_SECRET is configured
+    if (!process.env.CRON_SECRET) {
+      Sentry.captureMessage("CRON_SECRET not configured", { level: "error" });
+      return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+    }
+
+    // Timing-safe comparison to prevent timing attacks
+    const authHeader = request.headers.get("authorization") || "";
+    const expected = Buffer.from(`Bearer ${process.env.CRON_SECRET}`);
+    const actual = Buffer.from(authHeader);
+
+    if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -117,8 +128,9 @@ export async function GET(request: Request) {
       .upsert(kpiRows, { onConflict: "restaurant_id,date" });
 
     if (upsertError) {
+      console.error("Failed to upsert KPI entries:", upsertError);
       return NextResponse.json(
-        { error: `Failed to upsert: ${upsertError.message}` },
+        { error: "Failed to save KPI data" },
         { status: 500 }
       );
     }
@@ -174,7 +186,7 @@ export async function GET(request: Request) {
 
     console.error("Cron download-reports error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

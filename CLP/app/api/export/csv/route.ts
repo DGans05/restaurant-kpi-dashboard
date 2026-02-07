@@ -9,6 +9,25 @@ const ExportParamsSchema = z.object({
   restaurantId: z.string().min(1).optional(),
 });
 
+/**
+ * Sanitize CSV values to prevent CSV injection attacks.
+ * Prefixes dangerous characters with a single quote.
+ */
+function sanitizeCSVValue(value: unknown): string {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+
+  const str = String(value);
+
+  // Check if value starts with dangerous characters
+  if (/^[=+\-@\t\r]/.test(str)) {
+    return `'${str}`; // Prefix with single quote to prevent formula execution
+  }
+
+  return str;
+}
+
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
@@ -39,7 +58,8 @@ export async function GET(request: Request) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("CSV export database error:", error);
+      return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 });
     }
 
     if (!data || data.length === 0) {
@@ -58,30 +78,30 @@ export async function GET(request: Request) {
     ];
 
     const rows = data.map((row) => [
-      row.date,
-      row.day_name,
-      row.week_number,
-      row.restaurant_id,
-      row.planned_revenue,
-      row.gross_revenue,
-      row.net_revenue,
-      row.planned_labour_cost,
-      row.labour_cost,
-      row.planned_labour_pct ?? "",
-      row.labour_pct,
-      row.worked_hours,
-      row.labour_productivity,
-      row.food_cost,
-      row.food_cost_pct,
-      row.delivery_rate_30min,
-      row.on_time_delivery_mins,
-      row.make_time_mins,
-      row.drive_time_mins,
-      row.order_count,
-      row.avg_order_value,
-      row.orders_per_run,
-      row.cash_difference ?? "",
-      row.manager,
+      sanitizeCSVValue(row.date),
+      sanitizeCSVValue(row.day_name),
+      sanitizeCSVValue(row.week_number),
+      sanitizeCSVValue(row.restaurant_id),
+      sanitizeCSVValue(row.planned_revenue),
+      sanitizeCSVValue(row.gross_revenue),
+      sanitizeCSVValue(row.net_revenue),
+      sanitizeCSVValue(row.planned_labour_cost),
+      sanitizeCSVValue(row.labour_cost),
+      sanitizeCSVValue(row.planned_labour_pct ?? ""),
+      sanitizeCSVValue(row.labour_pct),
+      sanitizeCSVValue(row.worked_hours),
+      sanitizeCSVValue(row.labour_productivity),
+      sanitizeCSVValue(row.food_cost),
+      sanitizeCSVValue(row.food_cost_pct),
+      sanitizeCSVValue(row.delivery_rate_30min),
+      sanitizeCSVValue(row.on_time_delivery_mins),
+      sanitizeCSVValue(row.make_time_mins),
+      sanitizeCSVValue(row.drive_time_mins),
+      sanitizeCSVValue(row.order_count),
+      sanitizeCSVValue(row.avg_order_value),
+      sanitizeCSVValue(row.orders_per_run),
+      sanitizeCSVValue(row.cash_difference ?? ""),
+      sanitizeCSVValue(row.manager),
     ]);
 
     const csvContent = [
@@ -102,19 +122,16 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.issues }, { status: 400 });
     }
 
-    // Capture unexpected errors in Sentry
+    // Capture unexpected errors in Sentry (without sensitive URL params)
     Sentry.captureException(error, {
       tags: {
         component: "csv-export",
-      },
-      extra: {
-        url: request.url,
       },
     });
 
     console.error("CSV export error:", error);
     return NextResponse.json({
-      error: error instanceof Error ? error.message : "Unknown error"
+      error: "Internal server error"
     }, { status: 500 });
   }
 }

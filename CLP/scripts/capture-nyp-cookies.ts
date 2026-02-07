@@ -185,7 +185,7 @@ async function main() {
     console.log('\n✨ Done! Cookies are ready for automated downloads.');
     console.log('   Next: Test the cron job with:');
     console.log('   curl -X POST https://nypkpi.com/api/cron/download-reports \\');
-    console.log('     -H "Authorization: Bearer nyp-kpi-cron-secret-2026"');
+    console.log('     -H "Authorization: Bearer $CRON_SECRET"');
 
     // Keep browser open for 5 seconds so you can verify
     console.log('\n⏸️  Browser will stay open for 5 seconds...');

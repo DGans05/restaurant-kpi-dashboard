@@ -389,3 +389,62 @@ Created `docs/PERFORMANCE.md` with:
 ```
 
 All queries optimized for production scale! ⚡
+
+---
+
+## ✅ Security Hardening Complete!
+
+### Security Review & Fixes ✅
+- ✅ Ran comprehensive security audit (everything-claude-code:security-reviewer)
+- ✅ Fixed 1 CRITICAL, 4 HIGH, 4 MEDIUM, 2 LOW severity issues
+- ✅ Created SECURITY_NOTICE.md with rotation instructions
+
+### Issues Fixed
+
+**CRITICAL (1):**
+- Removed hardcoded CRON_SECRET from scripts → Requires rotation!
+
+**HIGH (4):**
+- Added timing-safe token comparison (crypto.timingSafeEqual)
+- Generic error messages (no internal details leaked)
+- Added CRON_SECRET validation (prevents undefined bypass)
+- Supabase errors sanitized (no schema leakage)
+
+**MEDIUM (4):**
+- CSV injection protection (sanitizes =+-@\t\r characters)
+- Removed all console.log from production code
+- URL params removed from Sentry logging
+- Error details logged server-side only
+
+**LOW (2):**
+- CRON_SECRET undefined check
+- Request URL sanitized in error logs
+
+### Security Improvements
+
+**Before:**
+- Hardcoded secret in source code
+- Timing-unsafe string comparison
+- Internal error messages exposed
+- CSV injection vulnerable
+- 9 console.log statements
+
+**After:**
+- No secrets in code (requires .env)
+- Timing-safe Buffer comparison
+- Generic error messages only
+- CSV values sanitized
+- Clean production logs
+
+### Files Secured
+- `app/api/cron/download-reports/route.ts`
+- `app/api/cron/refresh-cookies/route.ts`
+- `app/api/export/csv/route.ts`
+- `scripts/capture-nyp-cookies.ts`
+
+### Action Required
+⚠️ **ROTATE CRON_SECRET** - The value `nyp-kpi-cron-secret-2026` was exposed in source code.
+
+See `SECURITY_NOTICE.md` for rotation instructions.
+
+All API endpoints now production-hardened! 🔒
