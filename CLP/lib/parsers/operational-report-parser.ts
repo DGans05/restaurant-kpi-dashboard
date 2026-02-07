@@ -50,6 +50,86 @@ export function parseOperationalReport(
   }
 
   const worksheet = workbook.Sheets[sheetName];
+
+  // Get raw rows to find header row
+  const rawRowsArray = XLSX.utils.sheet_to_json<any[]>(worksheet, {
+    header: 1,
+    defval: null,
+  });
+
+  // Find the header row (contains "Datum" or "Date")
+  let headerRowIndex = -1;
+  for (let i = 0; i < Math.min(10, rawRowsArray.length); i++) {
+    const row = rawRowsArray[i];
+    if (row && row.some((cell: any) =>
+      typeof cell === 'string' && (cell.includes('Datum') || cell.includes('Date'))
+    )) {
+      headerRowIndex = i;
+      break;
+    }
+  }
+
+  if (headerRowIndex === -1) {
+    // Fallback to original behavior
+    return parseWithoutHeaderDetection(worksheet);
+  }
+
+  // Parse from the header row onwards
+  const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
+    worksheet,
+    { defval: null, range: headerRowIndex }
+  );
+
+  const results: ParsedOperationalEntry[] = [];
+
+  for (const row of rawRows) {
+    const dateStr = extractDate(row);
+    if (!dateStr) {
+      continue;
+    }
+
+    if (isSummaryRow(row)) {
+      continue;
+    }
+
+    const date = new Date(dateStr);
+
+    results.push({
+      date: dateStr,
+      dayName: format(date, "EEEE"),
+      weekNumber: getISOWeek(date),
+      plannedRevenue: findNumeric(row, "Gepland Omzet", "Omzet Begroot", "Planned Revenue", "Begroot omzet") ?? 0,
+      grossRevenue: findNumeric(row, "Bruto Omzet", "Omzet Bruto", "Gross Revenue") ?? 0,
+      netRevenue: findNumeric(row, "Netto Omzet", "Omzet Netto", "Net Revenue") ?? 0,
+      plannedLabourCost: findNumeric(row, "Gepland AK", "Arbeidskosten Begroot", "Planned Labour") ?? 0,
+      labourCost: findNumeric(row, "Arbeidskosten", "Labour Cost") ?? 0,
+      plannedLabourPct: findPercentage(row, "Gepland \n% Arbeidskosten", "Begroot Arbeids%", "Planned Labour %"),
+      labourPct: findPercentage(row, "% Arbeidskosten", "Arbeids%", "Labour %"),
+      workedHours: findNumeric(row, "Gewerte Uren", "Gewerkte uren", "Worked Hours", "Uren") ?? 0,
+      labourProductivity: findNumeric(row, "Arbeidsproduc", "Arbeidsproductiviteit", "Productivity") ?? 0,
+      foodCost: findNumeric(row, "Food Cost", "Voedselkosten", "COGS") ?? 0,
+      foodCostPct: findPercentage(row, "Food Cost %", "Voedselkosten %", "COGS %"),
+      deliveryRate30min: findPercentage(row, "30 min bezorgd", "Bezorgd binnen 30 min %", "% binnen 30 min", "30 min %"),
+      onTimeDeliveryMins: findNumeric(row, "OTD", "Bezorgtijd", "On Time Delivery") ?? 0,
+      makeTimeMins: findNumeric(row, "Maaktijd", "Bereidtijd", "Make Time", "Minutes") ?? 0,
+      driveTimeMins: findNumeric(row, "Rijdtijd", "Rijtijd", "Drive Time", "Driving Time") ?? 0,
+      orderCount: findNumeric(row, "Orders", "Bestellingen", "Aantal bestellingen") ?? 0,
+      avgOrderValue: findNumeric(row, "Gemiddelde OW", "Gem. bestelbedrag", "Avg Order Value") ?? 0,
+      ordersPerRun: findNumeric(row, "OPR", "Bestellingen per rit", "Orders per run") ?? 0,
+      cashDifference: findNumeric(row, "Kasverschil", "Cash Difference"),
+      manager: findString(row, "Verantwoordelijk", "Manager", "Vestigingsmanager"),
+    });
+  }
+
+  return results.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * Fallback parser without header detection
+ */
+function parseWithoutHeaderDetection(
+  worksheet: XLSX.WorkSheet
+): ParsedOperationalEntry[] {
   const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
     worksheet,
     { defval: null }
@@ -73,26 +153,26 @@ export function parseOperationalReport(
       date: dateStr,
       dayName: format(date, "EEEE"),
       weekNumber: getISOWeek(date),
-      plannedRevenue: findNumeric(row, "Omzet Begroot", "Planned Revenue", "Begroot omzet") ?? 0,
-      grossRevenue: findNumeric(row, "Omzet Bruto", "Gross Revenue", "Bruto omzet") ?? 0,
-      netRevenue: findNumeric(row, "Omzet Netto", "Net Revenue", "Netto omzet") ?? 0,
-      plannedLabourCost: findNumeric(row, "Arbeidskosten Begroot", "Planned Labour") ?? 0,
+      plannedRevenue: findNumeric(row, "Gepland Omzet", "Omzet Begroot", "Planned Revenue") ?? 0,
+      grossRevenue: findNumeric(row, "Bruto Omzet", "Omzet Bruto", "Gross Revenue") ?? 0,
+      netRevenue: findNumeric(row, "Netto Omzet", "Omzet Netto", "Net Revenue") ?? 0,
+      plannedLabourCost: findNumeric(row, "Gepland AK", "Arbeidskosten Begroot", "Planned Labour") ?? 0,
       labourCost: findNumeric(row, "Arbeidskosten", "Labour Cost") ?? 0,
-      plannedLabourPct: findNumeric(row, "Begroot Arbeids%", "Planned Labour %"),
-      labourPct: findNumeric(row, "Arbeids%", "Labour %") ?? 0,
-      workedHours: findNumeric(row, "Gewerkte uren", "Worked Hours", "Uren") ?? 0,
-      labourProductivity: findNumeric(row, "Arbeidsproductiviteit", "Productivity") ?? 0,
+      plannedLabourPct: findPercentage(row, "Gepland \n% Arbeidskosten", "Begroot Arbeids%", "Planned Labour %"),
+      labourPct: findPercentage(row, "% Arbeidskosten", "Arbeids%", "Labour %"),
+      workedHours: findNumeric(row, "Gewerte Uren", "Gewerkte uren", "Worked Hours") ?? 0,
+      labourProductivity: findNumeric(row, "Arbeidsproduc", "Arbeidsproductiviteit", "Productivity") ?? 0,
       foodCost: findNumeric(row, "Food Cost", "Voedselkosten", "COGS") ?? 0,
-      foodCostPct: findNumeric(row, "Food Cost %", "Voedselkosten %", "COGS %") ?? 0,
-      deliveryRate30min: findNumeric(row, "Bezorgd binnen 30 min %", "% binnen 30 min", "30 min %") ?? 0,
+      foodCostPct: findPercentage(row, "Food Cost %", "Voedselkosten %", "COGS %"),
+      deliveryRate30min: findPercentage(row, "30 min bezorgd", "Bezorgd binnen 30 min %", "% binnen 30 min"),
       onTimeDeliveryMins: findNumeric(row, "OTD", "Bezorgtijd", "On Time Delivery") ?? 0,
-      makeTimeMins: findNumeric(row, "Bereidtijd", "Make Time", "Minutes") ?? 0,
-      driveTimeMins: findNumeric(row, "Rijtijd", "Drive Time", "Driving Time") ?? 0,
-      orderCount: findNumeric(row, "Bestellingen", "Orders", "Aantal bestellingen") ?? 0,
-      avgOrderValue: findNumeric(row, "Gem. bestelbedrag", "Avg Order Value") ?? 0,
-      ordersPerRun: findNumeric(row, "Bestellingen per rit", "Orders per run") ?? 0,
+      makeTimeMins: findNumeric(row, "Maaktijd", "Bereidtijd", "Make Time") ?? 0,
+      driveTimeMins: findNumeric(row, "Rijdtijd", "Rijtijd", "Drive Time") ?? 0,
+      orderCount: findNumeric(row, "Orders", "Bestellingen", "Aantal bestellingen") ?? 0,
+      avgOrderValue: findNumeric(row, "Gemiddelde OW", "Gem. bestelbedrag", "Avg Order Value") ?? 0,
+      ordersPerRun: findNumeric(row, "OPR", "Bestellingen per rit", "Orders per run") ?? 0,
       cashDifference: findNumeric(row, "Kasverschil", "Cash Difference"),
-      manager: findString(row, "Manager", "Vestigingsmanager"),
+      manager: findString(row, "Verantwoordelijk", "Manager", "Vestigingsmanager"),
     });
   }
 
@@ -117,6 +197,14 @@ function findNumeric(
 ): number | null {
   const value = findColumn(row, ...names);
   return parseNumeric(value);
+}
+
+function findPercentage(
+  row: Record<string, unknown>,
+  ...names: string[]
+): number {
+  const value = findColumn(row, ...names);
+  return parsePercentage(value);
 }
 
 function findString(
@@ -198,6 +286,23 @@ function parseNumeric(value: unknown): number | null {
   const str = String(value).replace(",", ".").replace("%", "").trim();
   const num = parseFloat(str);
   return isNaN(num) ? null : round2(num);
+}
+
+/**
+ * Parse a percentage field - handles both decimal (0.25 = 25%) and already-converted (25) formats
+ */
+function parsePercentage(value: unknown): number {
+  const num = parseNumeric(value);
+  if (num === null) {
+    return 0;
+  }
+  // If value is between 0-1, assume it's a decimal percentage (Excel format)
+  // Convert to percentage by multiplying by 100
+  if (num > 0 && num < 1) {
+    return round2(num * 100);
+  }
+  // Otherwise assume it's already in percentage format
+  return num;
 }
 
 function round2(n: number): number {
