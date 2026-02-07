@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { NYPApiClient, SessionExpiredError } from "@/lib/services/nyp-api-client";
 import { getReportTypeConfig } from "@/lib/config/report-types";
@@ -153,11 +154,24 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     if (error instanceof SessionExpiredError) {
+      // Don't send session expired to Sentry (expected error)
       return NextResponse.json(
         { error: "NYP session expired" },
         { status: 401 }
       );
     }
+
+    // Capture unexpected errors in Sentry
+    Sentry.captureException(error, {
+      tags: {
+        component: "cron-download-reports",
+        restaurant_id: "rosmalen",
+      },
+      extra: {
+        date: format(subDays(new Date(), 1), "yyyy-MM-dd"),
+      },
+    });
+
     console.error("Cron download-reports error:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },

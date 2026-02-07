@@ -16,6 +16,7 @@
     "db:create-user": "tsx scripts/create-first-user.ts",
     "deploy:env": "./scripts/set-vercel-env.sh",
     "deploy": "vercel --prod",
+    "sentry:setup": "./scripts/setup-sentry.sh",
     "nyp:capture-cookies": "tsx scripts/capture-nyp-cookies.ts",
     "test:parser": "tsx scripts/test-parser.ts",
     "test": "vitest",
@@ -24,6 +25,7 @@
     "test:run": "vitest run"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.38.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.0",
     "@types/pdf-parse": "^1.1.5",
