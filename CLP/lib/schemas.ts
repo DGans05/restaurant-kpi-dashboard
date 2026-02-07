@@ -36,6 +36,10 @@ export const KPIEntrySchema = z.object({
   makeTimeMins: z.number().nonnegative(),
   driveTimeMins: z.number().nonnegative(),
 
+  // Food Cost (COGS)
+  foodCost: z.number().nonnegative(),
+  foodCostPct: z.number().nonnegative(),
+
   // Orders
   orderCount: z.number().int().nonnegative(),
   avgOrderValue: z.number().nonnegative(),
@@ -46,11 +50,11 @@ export const KPIEntrySchema = z.object({
   manager: z.string().min(1),
 });
 
-export const DateRangeDaysSchema = z.union([
-  z.literal(7),
-  z.literal(14),
-  z.literal(28),
-]);
+export const PeriodViewSchema = z.enum(["week", "month"]);
+
+export const ISOWeekSchema = z.string().regex(/^\d{4}-W\d{2}$/);
+
+export const ISOMonthSchema = z.string().regex(/^\d{4}-\d{2}$/);
 
 export const KPISummarySchema = z.object({
   totalNetRevenue: z.number().nonnegative(),
@@ -59,6 +63,10 @@ export const KPISummarySchema = z.object({
   avgLabourPct: z.number().nonnegative(),
   avgPlannedLabourPct: z.number().nonnegative(),
   labourVariance: z.number(),
+  avgFoodCostPct: z.number().nonnegative(),
+  totalFoodCost: z.number().nonnegative(),
+  avgPrimeCostPct: z.number().nonnegative(),
+  totalPrimeCost: z.number().nonnegative(),
   totalOrders: z.number().int().nonnegative(),
   avgOrderValue: z.number().nonnegative(),
   avgLabourProductivity: z.number().nonnegative(),
@@ -79,4 +87,77 @@ export const DeliveryDataPointSchema = z.object({
   onTimeDeliveryMins: z.number().nonnegative(),
   makeTimeMins: z.number().nonnegative(),
   driveTimeMins: z.number().nonnegative(),
+});
+
+export const DeliveryOrderSchema = z.object({
+  orderNumber: z.string().min(1),
+  phoneNumber: z.string().min(1),
+  waitingTimeMins: z.number().nonnegative(),
+  orderPlaced: z.date(),
+  completed: z.date().nullable(),
+  driverName: z.string().nullable(),
+  address: z.string().nullable(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+export const MonthFilterSchema = z.string().regex(/^\d{4}-\d{2}$/);
+
+export const ReportTypeSchema = z.enum([
+  'OPERATIONAL',
+  'TIME_KEEPING',
+  'MANUAL_DISCOUNT',
+  'CANCELLED_ORDERS',
+  'LABOUR',
+  'TIMEKEEPING_SUMMARY',
+  'ZIPCODE_AREA_DELIVERY',
+  'ORDER_BY_HOURS',
+  'COUPON_DISCOUNT',
+  'USER_COMMENTS',
+  'LABOUR_EMPLOYEE',
+  'LOCAL_CUSTOMER_DATA',
+  'VARIANCE',
+  'STORE_ITEMS_SOLD',
+  'INVENTORY_IDEAL_USAGE',
+  'TIP',
+  'ISSUED_CLIENT_CREDIT',
+  'ISSUED_CLIENT_BALANCE',
+  'EXPENSES',
+  'INVENTORY_DELIVERY',
+  'INVENTORY_LOSS',
+  'INVENTORY_RETURNS',
+  'CASH_DRAWER_AUDIT',
+  'INVENTORY_DAILY_COUNT',
+  'SERVICE',
+  'DAILY_SALES',
+  'COUPON_ANALYSIS',
+  'VARIANCE_PER_STOCK_PRODUCT',
+  'DRIVER_REPORT',
+  'PAYMENT_METHOD',
+]);
+
+export const UploadStatusSchema = z.enum(['uploaded', 'parsing', 'parsed', 'error']);
+
+export const ReportSchema = z.object({
+  id: z.string().uuid(),
+  restaurantId: z.string(),
+  reportType: ReportTypeSchema,
+  reportName: z.string(),
+  reportPeriod: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  filePath: z.string().nullable(),
+  fileSizeBytes: z.number().int().positive().nullable(),
+  uploadStatus: UploadStatusSchema,
+  uploadError: z.string().nullable(),
+  uploadedAt: z.date(),
+  parsedAt: z.date().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export const CreateReportDtoSchema = z.object({
+  restaurantId: z.string(),
+  reportType: ReportTypeSchema,
+  reportName: z.string(),
+  reportPeriod: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  filePath: z.string().optional(),
+  fileSizeBytes: z.number().int().positive().optional(),
 });

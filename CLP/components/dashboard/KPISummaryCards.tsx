@@ -10,54 +10,20 @@ import {
   Minus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatEUR, formatEURWithCents, formatPct, formatNumber } from "@/lib/utils/formatters";
+import { cardStyles } from "@/lib/utils/styles";
 import type { KPISummary } from "@/lib/types";
+import { PrimeCostCard } from "./PrimeCostCard";
 
 /**
- * Format value as EUR with nl-NL locale
- * Usage: formatEUR(42000) => "€ 42.000"
- */
-function formatEUR(value: number): string {
-  return new Intl.NumberFormat("nl-NL", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-/**
- * Format value as EUR with decimals for avg order value
- * Usage: formatEURWithCents(42.50) => "€ 42,50"
- */
-function formatEURWithCents(value: number): string {
-  return new Intl.NumberFormat("nl-NL", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
-/**
- * Format percentage with 1 decimal
- * Usage: formatPct(23.4567) => "23.5%"
- */
-function formatPct(value: number): string {
-  return `${value.toFixed(1)}%`;
-}
-
-/**
- * Format number with nl-NL locale
- * Usage: formatNumber(1234) => "1.234"
- */
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("nl-NL").format(value);
-}
-
-/**
- * VarianceBadge shows plan-vs-actual variance
+ * VarianceBadge shows plan-vs-actual variance with threshold-based coloring
  * For revenue: negative = bad (red), positive = good (green)
  * For labour: positive = bad (higher costs = red), negative = good (green) → use invert=true
+ *
+ * Thresholds:
+ * - Excellent (green): < 2% variance
+ * - Warning (yellow): 2-5% variance
+ * - Danger (red): > 5% variance
  */
 function VarianceBadge({
   value,
@@ -69,9 +35,25 @@ function VarianceBadge({
   suffix?: string;
 }) {
   const isPositive = value > 0;
-  const isNeutral = Math.abs(value) < 0.1;
+  const absValue = Math.abs(value);
+  const isNeutral = absValue < 0.1;
   const isGood = invert ? !isPositive : isPositive;
   const Icon = isNeutral ? Minus : isPositive ? TrendingUp : TrendingDown;
+
+  // Determine status based on absolute variance magnitude
+  let status: "good" | "warning" | "danger";
+  if (absValue < 2) {
+    status = "good";
+  } else if (absValue < 5) {
+    status = "warning";
+  } else {
+    status = "danger";
+  }
+
+  // If it's a "bad" direction (e.g., negative revenue), show red regardless of magnitude
+  if (!isNeutral && !isGood) {
+    status = "danger";
+  }
 
   return (
     <span
@@ -79,9 +61,11 @@ function VarianceBadge({
         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
         isNeutral
           ? "bg-muted text-muted-foreground"
-          : isGood
-            ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-            : "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400"
+          : status === "good"
+            ? "bg-[#009a44]/10 text-[#009a44] dark:bg-[#009a44]/20 dark:text-[#009a44]"
+            : status === "warning"
+              ? "bg-[#ffda28]/10 text-[#ffc814] dark:bg-[#ffda28]/20 dark:text-[#ffda28]"
+              : "bg-[#f3001d]/10 text-[#f3001d] dark:bg-[#f3001d]/20 dark:text-[#ff5050]"
       )}
     >
       <Icon className="size-3" />
@@ -102,26 +86,26 @@ const cardMeta = [
     title: "Netto Omzet",
     icon: Euro,
     iconBg:
-      "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400",
+      "bg-[#009a44]/10 text-[#009a44] dark:bg-[#009a44]/20 dark:text-[#009a44]",
   },
   {
     key: "labour",
     title: "Arbeidskosten",
     icon: Users,
-    iconBg: "bg-sky-100 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400",
+    iconBg: "bg-[#ffa51d]/10 text-[#ffa51d] dark:bg-[#ffa51d]/20 dark:text-[#ffa51d]",
   },
   {
     key: "orders",
     title: "Bestellingen",
     icon: ShoppingCart,
-    iconBg: "bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400",
+    iconBg: "bg-[#006dec]/10 text-[#006dec] dark:bg-[#006dec]/20 dark:text-[#006dec]",
   },
   {
     key: "productivity",
     title: "Productiviteit",
     icon: Timer,
     iconBg:
-      "bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400",
+      "bg-[#ffda28]/10 text-[#ffc814] dark:bg-[#ffda28]/20 dark:text-[#ffda28]",
   },
 ] as const;
 
@@ -160,12 +144,13 @@ export function KPISummaryCards({ summary }: KPISummaryCardsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {cards.map((card, i) => (
         <div
           key={card.key}
           className={cn(
-            "animate-fade-up group relative rounded-xl bg-card p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] transition-all duration-300 hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.05)] dark:shadow-none dark:border dark:border-border",
+            "animate-fade-up animate-lift group relative",
+            cardStyles,
             `stagger-${i + 1}`
           )}
         >
@@ -183,7 +168,7 @@ export function KPISummaryCards({ summary }: KPISummaryCardsProps) {
             </div>
           </div>
 
-          <p className="text-3xl font-semibold leading-none tracking-tight text-foreground mb-3">
+          <p className="metric-value text-3xl leading-none tracking-tight text-foreground mb-3">
             {card.value}
           </p>
 
@@ -193,6 +178,9 @@ export function KPISummaryCards({ summary }: KPISummaryCardsProps) {
           </div>
         </div>
       ))}
+
+      {/* Prime Cost Card - 5th KPI */}
+      <PrimeCostCard summary={summary} animationDelay="stagger-5" />
     </div>
   );
 }

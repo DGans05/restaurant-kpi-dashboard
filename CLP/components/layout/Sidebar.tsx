@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 const menuItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Restaurants", href: "/restaurants", icon: Store },
-  { label: "Reports", href: "#", icon: FileBarChart, disabled: true },
+  { label: "Reports", href: "/reports", icon: FileBarChart },
   { label: "Settings", href: "#", icon: Settings, disabled: true },
 ];
 
@@ -62,12 +62,12 @@ export function Sidebar() {
             className="flex items-center gap-2.5"
             onClick={() => setOpen(false)}
           >
-            <div className="flex size-9 items-center justify-center rounded-full bg-primary">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-primary">
               <Flame className="size-5 text-white" />
             </div>
             <div>
-              <span className="text-base font-semibold tracking-tight text-sidebar-foreground">
-                Hearth KPI
+              <span className="text-lg font-display text-sidebar-foreground">
+                NYP KPI
               </span>
             </div>
           </Link>
@@ -95,9 +95,9 @@ export function Sidebar() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                   isActive
-                    ? "bg-primary text-white"
+                    ? "bg-primary text-white shadow-[0_4px_8px_rgba(0,154,68,0.2)]"
                     : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground",
                   item.disabled && "pointer-events-none opacity-30"
                 )}
@@ -118,7 +118,7 @@ export function Sidebar() {
         <div className="border-t border-sidebar-border px-3 py-4 space-y-3">
           <Link
             href="#"
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-sidebar-accent transition-all duration-200"
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-primary hover:bg-sidebar-accent transition-all duration-200"
           >
             <LogOut className="size-[18px]" />
             Logout

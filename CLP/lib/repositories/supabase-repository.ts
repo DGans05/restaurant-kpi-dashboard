@@ -52,6 +52,8 @@ export class SupabaseKPIRepository implements KPIRepository {
       labourPct: Number(row.labour_pct),
       workedHours: Number(row.worked_hours),
       labourProductivity: Number(row.labour_productivity),
+      foodCost: Number(row.food_cost || 0),
+      foodCostPct: Number(row.food_cost_pct || 0),
       deliveryRate30min: Number(row.delivery_rate_30min),
       onTimeDeliveryMins: Number(row.on_time_delivery_mins),
       makeTimeMins: Number(row.make_time_mins),

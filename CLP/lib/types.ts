@@ -24,6 +24,10 @@ export interface KPIEntry {
   workedHours: number;
   labourProductivity: number; // net revenue per hour
 
+  // Food Cost (COGS)
+  foodCost: number;
+  foodCostPct: number; // % of net revenue
+
   // Delivery
   deliveryRate30min: number; // % delivered within 30 min
   onTimeDeliveryMins: number; // OTD in minutes
@@ -51,6 +55,14 @@ export interface KPISummary {
   avgPlannedLabourPct: number;
   labourVariance: number; // percentage point difference
 
+  // Food Cost (COGS)
+  avgFoodCostPct: number;
+  totalFoodCost: number;
+
+  // Prime Cost (COGS + Labour)
+  avgPrimeCostPct: number;
+  totalPrimeCost: number;
+
   // Orders
   totalOrders: number;
   avgOrderValue: number;
@@ -76,4 +88,101 @@ export interface DeliveryDataPoint {
   driveTimeMins: number;
 }
 
-export type DateRangeDays = 7 | 14 | 28;
+export type PeriodView = "week" | "month";
+
+// Individual delivery order (for modal)
+export interface DeliveryOrder {
+  orderNumber: string;
+  phoneNumber: string;
+  waitingTimeMins: number;
+  orderPlaced: Date;
+  completed: Date | null;
+  driverName: string | null;
+  address: string | null;
+  date: string; // ISO YYYY-MM-DD
+}
+
+// Monthly aggregated delivery summary
+export interface DeliveryMonthSummary {
+  month: string; // YYYY-MM
+  avgDeliveryRate30min: number;
+  avgOnTimeDeliveryMins: number;
+  avgMakeTimeMins: number;
+  avgDriveTimeMins: number;
+  totalOrders: number;
+  longestWaitTimes: DeliveryOrder[]; // Top 30
+}
+
+// Aggregated delivery summary from KPI entries (period-aligned)
+export interface DeliverySummary {
+  avgDeliveryRate30min: number;
+  avgOnTimeDeliveryMins: number;
+  avgMakeTimeMins: number;
+  avgDriveTimeMins: number;
+  totalOrders: number;
+}
+
+export type MonthOption = {
+  label: string; // "Feb 2026"
+  value: string; // "2026-02"
+};
+
+// Report Types
+export type ReportType =
+  | 'OPERATIONAL'
+  | 'TIME_KEEPING'
+  | 'MANUAL_DISCOUNT'
+  | 'CANCELLED_ORDERS'
+  | 'LABOUR'
+  | 'TIMEKEEPING_SUMMARY'
+  | 'ZIPCODE_AREA_DELIVERY'
+  | 'ORDER_BY_HOURS'
+  | 'COUPON_DISCOUNT'
+  | 'USER_COMMENTS'
+  | 'LABOUR_EMPLOYEE'
+  | 'LOCAL_CUSTOMER_DATA'
+  | 'VARIANCE'
+  | 'STORE_ITEMS_SOLD'
+  | 'INVENTORY_IDEAL_USAGE'
+  | 'TIP'
+  | 'ISSUED_CLIENT_CREDIT'
+  | 'ISSUED_CLIENT_BALANCE'
+  | 'EXPENSES'
+  | 'INVENTORY_DELIVERY'
+  | 'INVENTORY_LOSS'
+  | 'INVENTORY_RETURNS'
+  | 'CASH_DRAWER_AUDIT'
+  | 'INVENTORY_DAILY_COUNT'
+  | 'SERVICE'
+  | 'DAILY_SALES'
+  | 'COUPON_ANALYSIS'
+  | 'VARIANCE_PER_STOCK_PRODUCT'
+  | 'DRIVER_REPORT'
+  | 'PAYMENT_METHOD';
+
+export type UploadStatus = 'uploaded' | 'parsing' | 'parsed' | 'error';
+
+export interface Report {
+  id: string;
+  restaurantId: string;
+  reportType: ReportType;
+  reportName: string;
+  reportPeriod: string; // YYYY-MM-DD
+  filePath: string | null;
+  fileSizeBytes: number | null;
+  uploadStatus: UploadStatus;
+  uploadError: string | null;
+  uploadedAt: Date;
+  parsedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ReportTypeMetadata {
+  type: ReportType;
+  name: string;
+  description: string;
+  category: 'financial' | 'operational' | 'inventory' | 'delivery';
+  fileType: 'excel' | 'pdf' | 'both';
+  nypUrl?: string;
+}

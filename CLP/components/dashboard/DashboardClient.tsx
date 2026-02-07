@@ -4,22 +4,23 @@ import { useRouter, usePathname } from "next/navigation";
 import { KPISummaryCards } from "@/components/dashboard/KPISummaryCards";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { LabourChart } from "@/components/dashboard/CostBreakdownChart";
-import { DateRangeFilter } from "@/components/dashboard/DateRangeFilter";
+import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
 import { RestaurantFilter } from "@/components/dashboard/RestaurantFilter";
 import { DeliveryPerformance } from "@/components/dashboard/DeliveryPerformance";
 import type {
   KPISummary,
   ChartDataPoint,
-  DeliveryDataPoint,
-  DateRangeDays,
+  DeliverySummary,
+  PeriodView,
   Restaurant,
 } from "@/lib/types";
 
 interface DashboardClientProps {
   summary: KPISummary;
   chartData: ChartDataPoint[];
-  deliveryData: DeliveryDataPoint[];
-  days: DateRangeDays;
+  deliverySummary: DeliverySummary;
+  view: PeriodView;
+  periodKey: string;
   restaurants: Restaurant[];
   currentRestaurantId?: string;
 }
@@ -27,17 +28,25 @@ interface DashboardClientProps {
 export function DashboardClient({
   summary,
   chartData,
-  deliveryData,
-  days,
+  deliverySummary,
+  view,
+  periodKey,
   restaurants,
   currentRestaurantId,
 }: DashboardClientProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleDaysChange = (newDays: DateRangeDays) => {
+  const handlePeriodChange = (newView: PeriodView, newKey: string) => {
     const params = new URLSearchParams(window.location.search);
-    params.set("days", String(newDays));
+    params.set("view", newView);
+    if (newView === "week") {
+      params.set("week", newKey);
+      params.delete("month");
+    } else {
+      params.set("month", newKey);
+      params.delete("week");
+    }
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -53,7 +62,7 @@ export function DashboardClient({
               : ""}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Einde Dag Rapportage — Februari 2025
+            Einde Dag Rapportage
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -61,7 +70,11 @@ export function DashboardClient({
             restaurants={restaurants}
             currentRestaurantId={currentRestaurantId}
           />
-          <DateRangeFilter value={days} onChange={handleDaysChange} />
+          <PeriodSelector
+            view={view}
+            periodKey={periodKey}
+            onChange={handlePeriodChange}
+          />
         </div>
       </div>
 
@@ -75,7 +88,7 @@ export function DashboardClient({
       </div>
 
       {/* Delivery Performance */}
-      <DeliveryPerformance data={deliveryData} />
+      <DeliveryPerformance summary={deliverySummary} />
     </div>
   );
 }

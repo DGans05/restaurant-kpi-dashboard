@@ -1,42 +1,46 @@
 import { cache } from "react";
-import { subDays, addDays } from "date-fns";
+import { addDays } from "date-fns";
 import { getKPIRepository } from "@/lib/repositories";
-import { DateRangeDaysSchema } from "@/lib/schemas";
 import type {
+  KPIEntry,
   KPISummary,
   ChartDataPoint,
   DeliveryDataPoint,
-  DateRangeDays,
+  DeliverySummary,
 } from "@/lib/types";
 
-/** Dataset ends on 2025-02-28 — anchor all filters here */
-const DATASET_END = new Date("2025-02-28T00:00:00.000Z");
+/**
+ * Shared cached entry fetcher — all service functions delegate here
+ */
+const getKPIEntriesInternal = async (start: Date, end: Date, restaurantId?: string): Promise<KPIEntry[]> => {
+  const repository = getKPIRepository();
+  const exclusiveEnd = addDays(end, 1);
+  return repository.findByDateRange(start, exclusiveEnd, restaurantId);
+};
+
+/**
+ * Cached entry fetcher keyed by ISO strings for proper deduplication.
+ * React cache() uses referential equality — Date objects never match,
+ * so we convert to strings for the cache key layer.
+ */
+const getKPIEntriesByKey = cache(
+  async (startISO: string, endISO: string, restaurantId?: string): Promise<KPIEntry[]> => {
+    return getKPIEntriesInternal(new Date(startISO), new Date(endISO), restaurantId);
+  }
+);
+
+const getKPIEntries = (start: Date, end: Date, restaurantId?: string): Promise<KPIEntry[]> => {
+  return getKPIEntriesByKey(start.toISOString(), end.toISOString(), restaurantId);
+};
 
 /**
  * Get KPI summary for a date range
- * @param days - Number of days to look back (7, 14, or 28)
- * @param restaurantId - Optional restaurant filter
- * @returns Promise of aggregated KPI summary
  */
 export const getKPISummary = cache(
-  async (days: DateRangeDays, restaurantId?: string): Promise<KPISummary> => {
-    // Validate input
-    const validatedDays = DateRangeDaysSchema.parse(days);
-
+  async (start: Date, end: Date, restaurantId?: string): Promise<KPISummary> => {
     try {
-      const repository = getKPIRepository();
+      const entries = await getKPIEntries(start, end, restaurantId);
 
-      // Calculate date range (inclusive)
-      const end = addDays(DATASET_END, 1); // exclusive upper bound
-      const start = subDays(DATASET_END, validatedDays - 1);
-
-      const entries = await repository.findByDateRange(
-        start,
-        end,
-        restaurantId
-      );
-
-      // Aggregate metrics
       const totalNetRevenue = entries.reduce((sum, e) => sum + e.netRevenue, 0);
       const totalPlannedRevenue = entries.reduce(
         (sum, e) => sum + e.plannedRevenue,
@@ -47,6 +51,7 @@ export const getKPISummary = cache(
         (sum, e) => sum + e.plannedLabourCost,
         0
       );
+      const totalFoodCost = entries.reduce((sum, e) => sum + e.foodCost, 0);
       const totalOrders = entries.reduce((sum, e) => sum + e.orderCount, 0);
       const totalHours = entries.reduce((sum, e) => sum + e.workedHours, 0);
 
@@ -56,6 +61,13 @@ export const getKPISummary = cache(
         totalPlannedRevenue > 0
           ? (totalPlannedLabourCost / totalPlannedRevenue) * 100
           : 0;
+      const avgFoodCostPct =
+        totalNetRevenue > 0 ? (totalFoodCost / totalNetRevenue) * 100 : 0;
+
+      const totalPrimeCost = totalFoodCost + totalLabourCost;
+      const avgPrimeCostPct =
+        totalNetRevenue > 0 ? (totalPrimeCost / totalNetRevenue) * 100 : 0;
+
       const avgOrderValue =
         totalOrders > 0 ? totalNetRevenue / totalOrders : 0;
       const avgLabourProductivity =
@@ -76,6 +88,10 @@ export const getKPISummary = cache(
         avgLabourPct,
         avgPlannedLabourPct,
         labourVariance,
+        avgFoodCostPct,
+        totalFoodCost,
+        avgPrimeCostPct,
+        totalPrimeCost,
         totalOrders,
         avgOrderValue,
         avgLabourProductivity,
@@ -89,32 +105,16 @@ export const getKPISummary = cache(
 
 /**
  * Get chart data for a date range
- * @param days - Number of days to look back (7, 14, or 28)
- * @param restaurantId - Optional restaurant filter
- * @returns Promise of chart data points
  */
 export const getChartData = cache(
   async (
-    days: DateRangeDays,
+    start: Date,
+    end: Date,
     restaurantId?: string
   ): Promise<ChartDataPoint[]> => {
-    // Validate input
-    const validatedDays = DateRangeDaysSchema.parse(days);
-
     try {
-      const repository = getKPIRepository();
+      const entries = await getKPIEntries(start, end, restaurantId);
 
-      // Calculate date range (inclusive)
-      const end = addDays(DATASET_END, 1); // exclusive upper bound
-      const start = subDays(DATASET_END, validatedDays - 1);
-
-      const entries = await repository.findByDateRange(
-        start,
-        end,
-        restaurantId
-      );
-
-      // Map to chart data (immutable)
       return entries.map((e) => ({
         date: e.date,
         netRevenue: e.netRevenue,
@@ -132,32 +132,16 @@ export const getChartData = cache(
 
 /**
  * Get delivery performance data for a date range
- * @param days - Number of days to look back (7, 14, or 28)
- * @param restaurantId - Optional restaurant filter
- * @returns Promise of delivery data points
  */
 export const getDeliveryData = cache(
   async (
-    days: DateRangeDays,
+    start: Date,
+    end: Date,
     restaurantId?: string
   ): Promise<DeliveryDataPoint[]> => {
-    // Validate input
-    const validatedDays = DateRangeDaysSchema.parse(days);
-
     try {
-      const repository = getKPIRepository();
+      const entries = await getKPIEntries(start, end, restaurantId);
 
-      // Calculate date range (inclusive)
-      const end = addDays(DATASET_END, 1); // exclusive upper bound
-      const start = subDays(DATASET_END, validatedDays - 1);
-
-      const entries = await repository.findByDateRange(
-        start,
-        end,
-        restaurantId
-      );
-
-      // Map to delivery data (immutable)
       return entries.map((e) => ({
         date: e.date,
         deliveryRate30min: e.deliveryRate30min,
@@ -168,6 +152,49 @@ export const getDeliveryData = cache(
     } catch (error) {
       console.error("Failed to fetch delivery data:", error);
       throw new Error("Unable to load delivery data. Please try again.");
+    }
+  }
+);
+
+/**
+ * Get aggregated delivery summary for a date range
+ */
+export const getDeliverySummary = cache(
+  async (
+    start: Date,
+    end: Date,
+    restaurantId?: string
+  ): Promise<DeliverySummary> => {
+    try {
+      const entries = await getKPIEntries(start, end, restaurantId);
+
+      const count = entries.length;
+      if (count === 0) {
+        return {
+          avgDeliveryRate30min: 0,
+          avgOnTimeDeliveryMins: 0,
+          avgMakeTimeMins: 0,
+          avgDriveTimeMins: 0,
+          totalOrders: 0,
+        };
+      }
+
+      const totalOrders = entries.reduce((sum, e) => sum + e.orderCount, 0);
+
+      return {
+        avgDeliveryRate30min:
+          entries.reduce((sum, e) => sum + e.deliveryRate30min, 0) / count,
+        avgOnTimeDeliveryMins:
+          entries.reduce((sum, e) => sum + e.onTimeDeliveryMins, 0) / count,
+        avgMakeTimeMins:
+          entries.reduce((sum, e) => sum + e.makeTimeMins, 0) / count,
+        avgDriveTimeMins:
+          entries.reduce((sum, e) => sum + e.driveTimeMins, 0) / count,
+        totalOrders,
+      };
+    } catch (error) {
+      console.error("Failed to fetch delivery summary:", error);
+      throw new Error("Unable to load delivery summary. Please try again.");
     }
   }
 );

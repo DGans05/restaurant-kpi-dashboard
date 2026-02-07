@@ -13,42 +13,31 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { ChartDataPoint } from "@/lib/types";
+import { formatEUR, formatEuroAxis } from "@/lib/utils/formatters";
+import { cardStyles, tooltipContentStyle } from "@/lib/utils/styles";
 
 interface RevenueChartProps {
   data: ChartDataPoint[];
 }
 
-function formatEuroAxis(value: number): string {
-  return `€${(value / 1000).toFixed(1)}k`;
-}
-
-function formatEuroTooltip(value: number): string {
-  return value.toLocaleString("nl-NL", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-}
-
 export function RevenueChart({ data }: RevenueChartProps) {
   if (data.length === 0) {
     return (
-      <div className="rounded-xl bg-card p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] dark:shadow-none dark:border dark:border-border">
-        <h3 className="text-lg font-semibold">Omzet</h3>
+      <div className={cardStyles}>
+        <h3 className="text-2xl font-display">OMZET</h3>
         <p className="mt-2 text-sm text-muted-foreground">Geen data beschikbaar</p>
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-up stagger-5 rounded-xl bg-card p-6 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)] dark:shadow-none dark:border dark:border-border">
+    <div className={`animate-fade-up animate-lift stagger-5 ${cardStyles}`}>
       <div className="mb-6 flex items-baseline justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">
-            Omzet
+          <h3 className="text-2xl font-display text-foreground">
+            OMZET
           </h3>
-          <p className="mt-0.5 text-xs uppercase tracking-wider text-muted-foreground">
+          <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground font-medium">
             Dagelijkse netto omzet vs plan
           </p>
         </div>
@@ -58,7 +47,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
           <CartesianGrid
             strokeDasharray="3 3"
             stroke="var(--border)"
-            strokeOpacity={0.3}
+            strokeOpacity={0.5}
             vertical={false}
           />
           <XAxis
@@ -77,33 +66,26 @@ export function RevenueChart({ data }: RevenueChartProps) {
             width={48}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "var(--card)",
-              border: "1px solid var(--border)",
-              borderRadius: "8px",
-              color: "var(--foreground)",
-              fontSize: "12px",
-              padding: "8px 12px",
-            }}
+            contentStyle={tooltipContentStyle}
             labelFormatter={(d) => format(parseISO(String(d)), "EEEE d MMM", { locale: nl })}
             formatter={(value, name) => {
               const label = name === "netRevenue" ? "Netto Omzet" : "Plan";
-              return [formatEuroTooltip(Number(value)), label];
+              return [formatEUR(Number(value)), label];
             }}
-            cursor={{ fill: "var(--primary)", opacity: 0.1 }}
+            cursor={{ fill: "#009a44", opacity: 0.08 }}
           />
           <Bar
             dataKey="netRevenue"
-            fill="var(--primary)"
-            radius={[4, 4, 0, 0]}
-            barSize={20}
+            fill="#009a44"
+            radius={[6, 6, 0, 0]}
+            barSize={24}
           />
           <Line
             dataKey="plannedRevenue"
-            stroke="#9ca3af"
+            stroke="#ffda28"
             strokeDasharray="5 5"
             dot={false}
-            strokeWidth={2}
+            strokeWidth={2.5}
           />
         </ComposedChart>
       </ResponsiveContainer>
