@@ -71,8 +71,8 @@ ON user_profiles(restaurant_id, user_id);
 
 -- Index for target lookup by restaurant and metric
 -- Used by: Dashboard threshold calculations
-CREATE INDEX IF NOT EXISTS idx_targets_restaurant_active
-ON targets(restaurant_id, metric, period_type) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_targets_restaurant_metric
+ON targets(restaurant_id, metric, period_type);
 
 -- ============================================================================
 -- STATISTICS & MONITORING
@@ -102,5 +102,5 @@ COMMENT ON INDEX idx_nyp_sessions_active IS
 COMMENT ON INDEX idx_user_profiles_user_id IS
   'Optimizes user authentication lookups';
 
-COMMENT ON INDEX idx_targets_restaurant_active IS
+COMMENT ON INDEX idx_targets_restaurant_metric IS
   'Optimizes target threshold lookups for KPI calculations';
