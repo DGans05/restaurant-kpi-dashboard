@@ -185,6 +185,89 @@ export const UserProfileSchema = z.object({
   restaurantId: z.string(),
   role: UserRoleSchema,
   displayName: z.string().nullable(),
+  isAdmin: z.boolean(),
+  deletedAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
+})
+
+export const BulkPlannedValuesEntrySchema = z.object({
+  restaurantId: z.string().min(1),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  plannedRevenue: z.number().positive(),
+  plannedLabourCost: z.number().positive(),
+});
+
+export const BulkPlannedValuesSchema = z.object({
+  restaurantId: z.string().min(1),
+  entries: z.array(BulkPlannedValuesEntrySchema).min(1).max(31),
+})
+
+// Admin Management Schemas
+
+export const AuditLogActionSchema = z.enum(['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'ACCESS'])
+
+export const AuditLogSchema = z.object({
+  id: z.string().uuid(),
+  userId: z.string().uuid().nullable(),
+  userEmail: z.string().nullable(),
+  action: AuditLogActionSchema,
+  resourceType: z.string(),
+  resourceId: z.string().nullable(),
+  oldValues: z.record(z.string(), z.unknown()).nullable(),
+  newValues: z.record(z.string(), z.unknown()).nullable(),
+  ipAddress: z.string().nullable(),
+  userAgent: z.string().nullable(),
+  createdAt: z.coerce.date(),
+})
+
+export const SystemSettingCategorySchema = z.enum(['general', 'email', 'security', 'features'])
+
+export const SystemSettingSchema = z.object({
+  id: z.string().uuid(),
+  key: z.string().min(1),
+  value: z.unknown(),
+  category: SystemSettingCategorySchema,
+  description: z.string().nullable(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export const AuditLogFiltersSchema = z.object({
+  userId: z.string().uuid().optional(),
+  resourceType: z.string().optional(),
+  action: AuditLogActionSchema.optional(),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+  limit: z.number().int().positive().max(1000).optional(),
+  offset: z.number().int().nonnegative().optional(),
+})
+
+export const CreateUserProfileDtoSchema = z.object({
+  restaurantId: z.string().min(1),
+  role: UserRoleSchema,
+  displayName: z.string().nullable(),
+  isAdmin: z.boolean().optional(),
+})
+
+export const UpdateUserProfileDtoSchema = z.object({
+  role: UserRoleSchema.optional(),
+  displayName: z.string().nullable().optional(),
+  isAdmin: z.boolean().optional(),
+  restaurantId: z.string().min(1).optional(),
+})
+
+export const CreateRestaurantDtoSchema = z.object({
+  name: z.string().min(1).max(100),
+})
+
+export const UpdateRestaurantDtoSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+})
+
+export const UpsertSystemSettingSchema = z.object({
+  key: z.string().min(1),
+  value: z.unknown(),
+  category: SystemSettingCategorySchema,
+  description: z.string().nullable().optional(),
 })

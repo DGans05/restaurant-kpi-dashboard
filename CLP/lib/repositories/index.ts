@@ -1,5 +1,11 @@
 import type { KPIRepository, RestaurantRepository } from "./kpi-repository";
 import type { DeliveryRepository } from "./delivery-repository";
+import type {
+  UserManagementRepository,
+  RestaurantManagementRepository,
+  AuditLogRepository,
+  SystemSettingsRepository,
+} from "./admin-repository";
 import {
   SeedKPIRepository,
   SeedRestaurantRepository,
@@ -9,13 +15,24 @@ import {
   SupabaseRestaurantRepository,
 } from "./supabase-repository";
 import { ExcelDeliveryRepository } from "./excel-delivery-repository";
+import {
+  SupabaseUserManagementRepository,
+  SupabaseRestaurantManagementRepository,
+  SupabaseAuditLogRepository,
+  SupabaseSystemSettingsRepository,
+} from "./supabase-admin-repository";
 
 export * from './report-repository';
 export * from './supabase-report-repository';
+export * from './admin-repository';
 
 let kpiRepo: KPIRepository | null = null;
 let restaurantRepo: RestaurantRepository | null = null;
 let deliveryRepo: DeliveryRepository | null = null;
+let userManagementRepo: UserManagementRepository | null = null;
+let restaurantManagementRepo: RestaurantManagementRepository | null = null;
+let auditLogRepo: AuditLogRepository | null = null;
+let systemSettingsRepo: SystemSettingsRepository | null = null;
 
 /**
  * Get KPI repository instance (lazy singleton)
@@ -51,4 +68,48 @@ export function getDeliveryRepository(): DeliveryRepository {
     deliveryRepo = new ExcelDeliveryRepository(dataPath);
   }
   return deliveryRepo;
+}
+
+/**
+ * Get User Management repository instance (lazy singleton)
+ * Always uses Supabase (admin operations require database)
+ */
+export function getUserManagementRepository(): UserManagementRepository {
+  if (!userManagementRepo) {
+    userManagementRepo = new SupabaseUserManagementRepository();
+  }
+  return userManagementRepo;
+}
+
+/**
+ * Get Restaurant Management repository instance (lazy singleton)
+ * Always uses Supabase (admin operations require database)
+ */
+export function getRestaurantManagementRepository(): RestaurantManagementRepository {
+  if (!restaurantManagementRepo) {
+    restaurantManagementRepo = new SupabaseRestaurantManagementRepository();
+  }
+  return restaurantManagementRepo;
+}
+
+/**
+ * Get Audit Log repository instance (lazy singleton)
+ * Always uses Supabase (admin operations require database)
+ */
+export function getAuditLogRepository(): AuditLogRepository {
+  if (!auditLogRepo) {
+    auditLogRepo = new SupabaseAuditLogRepository();
+  }
+  return auditLogRepo;
+}
+
+/**
+ * Get System Settings repository instance (lazy singleton)
+ * Always uses Supabase (admin operations require database)
+ */
+export function getSystemSettingsRepository(): SystemSettingsRepository {
+  if (!systemSettingsRepo) {
+    systemSettingsRepo = new SupabaseSystemSettingsRepository();
+  }
+  return systemSettingsRepo;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -12,7 +12,9 @@ import {
   Store,
   FileBarChart,
   PenSquare,
+  CalendarRange,
   Settings,
+  Shield,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,13 +25,40 @@ const menuItems = [
   { label: "Restaurants", href: "/restaurants", icon: Store },
   { label: "Reports", href: "/reports", icon: FileBarChart },
   { label: "KPI Invoer", href: "/kpis/new", icon: PenSquare },
-  { label: "Settings", href: "#", icon: Settings, disabled: true },
+  { label: "Bulk Planning", href: "/kpis/bulk-planned", icon: CalendarRange },
+  { label: "Admin", href: "/admin", icon: Shield, adminOnly: true },
+  { label: "Settings", href: "/admin/settings", icon: Settings, adminOnly: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const supabase = createClient();
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('is_admin')
+        .eq('user_id', user.id)
+        .single();
+
+      setIsAdmin(profile?.is_admin || false);
+      setLoading(false);
+    };
+
+    checkAdminStatus();
+  }, []);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -37,6 +66,14 @@ export function Sidebar() {
     router.push("/login");
     router.refresh();
   };
+
+  // Filter menu items based on admin status
+  const visibleMenuItems = menuItems.filter(item => {
+    if (item.adminOnly) {
+      return isAdmin;
+    }
+    return true;
+  });
 
   return (
     <>
@@ -98,8 +135,8 @@ export function Sidebar() {
           <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/40">
             Menu
           </p>
-          {menuItems.map((item) => {
-            const isActive = pathname === item.href;
+          {visibleMenuItems.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
             return (
               <Link
                 key={item.label}
@@ -109,8 +146,7 @@ export function Sidebar() {
                   "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                   isActive
                     ? "bg-primary text-white shadow-[0_4px_8px_rgba(0,154,68,0.2)]"
-                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                  item.disabled && "pointer-events-none opacity-30"
+                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 )}
               >
                 <item.icon

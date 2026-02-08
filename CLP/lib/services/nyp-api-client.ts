@@ -39,28 +39,87 @@ interface RequestOptions {
 }
 
 export class NYPApiClient {
-  private readonly cookieHeader: string;
+  private readonly cookies: Map<string, string>;
   private readonly headers: Record<string, string>;
 
   constructor(cookies: NypCookies) {
-    this.cookieHeader = cookiesToHeaderString(cookies);
+    // Initialize cookie jar from NypCookies object
+    this.cookies = new Map(Object.entries(cookies));
+
     this.headers = {
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Language': 'nl-NL,nl;q=0.9',
       'Origin': NYP_BASE_URL,
       'Referer': `${NYP_BASE_URL}/Reporting`,
-      'Cookie': this.cookieHeader,
     };
+  }
+
+  /**
+   * Generate Cookie header string from current cookie jar
+   */
+  private getCookieHeader(): string {
+    return Array.from(this.cookies.entries())
+      .map(([name, value]) => `${name}=${value}`)
+      .join('; ');
+  }
+
+  /**
+   * Parse Set-Cookie headers and update cookie jar
+   */
+  private updateCookiesFromResponse(response: Response, debug = false): void {
+    // Try getSetCookie() first (standard), fallback to get('set-cookie')
+    let setCookieHeaders: string[] = [];
+
+    if (typeof response.headers.getSetCookie === 'function') {
+      setCookieHeaders = response.headers.getSetCookie();
+    } else {
+      // Fallback for environments where getSetCookie() isn't available
+      const setCookieHeader = response.headers.get('set-cookie');
+      if (setCookieHeader) {
+        // set-cookie header can contain multiple cookies separated by commas
+        // But commas can also appear in cookie values (expires dates), so we need careful parsing
+        setCookieHeaders = setCookieHeader.split(/,(?=[^;]+?=)/);
+      }
+    }
+
+    if (debug && setCookieHeaders.length > 0) {
+      console.log(`  Received ${setCookieHeaders.length} Set-Cookie headers`);
+    }
+
+    for (const setCookie of setCookieHeaders) {
+      // Parse cookie: "name=value; Path=/; HttpOnly; Secure"
+      const parts = setCookie.split(';');
+      const [nameValue] = parts;
+
+      if (!nameValue) continue;
+
+      const equalsIndex = nameValue.indexOf('=');
+      if (equalsIndex === -1) continue;
+
+      const name = nameValue.substring(0, equalsIndex).trim();
+      const value = nameValue.substring(equalsIndex + 1).trim();
+
+      if (name && value !== undefined) {
+        this.cookies.set(name, value);
+        if (debug) {
+          console.log(`  Updated cookie: ${name}=${value.substring(0, 20)}${value.length > 20 ? '...' : ''}`);
+        }
+      }
+    }
   }
 
   /**
    * Make an authenticated request, detecting session expiry via 302 → login redirect
    */
-  private async request(options: RequestOptions): Promise<Response> {
+  private async request(options: RequestOptions & { debug?: boolean }): Promise<Response> {
     const url = `${NYP_BASE_URL}${options.endpoint}`;
 
-    const headers: Record<string, string> = { ...this.headers };
+    const headers: Record<string, string> = {
+      ...this.headers,
+      'Cookie': this.getCookieHeader(), // Use dynamic cookie header
+    };
+
     if (options.body) {
       headers['Content-Type'] = 'application/x-www-form-urlencoded';
     }
@@ -76,6 +135,9 @@ export class NYPApiClient {
         redirect: options.followRedirects === false ? 'manual' : 'follow',
         signal: controller.signal,
       });
+
+      // Update cookie jar from Set-Cookie headers
+      this.updateCookiesFromResponse(response, options.debug);
 
       // Detect session expiry: 302 redirect to login page
       if (response.status === 302) {
@@ -141,6 +203,85 @@ export class NYPApiClient {
         return false;
       }
       throw error;
+    }
+  }
+
+  /**
+   * Switch to a different store in the NYP system.
+   * The store context is maintained in the ActiveStore cookie.
+   *
+   * @param storeId - NYP store ID (e.g., 142 for Hinthammerstraat, 197 for Rosmalen)
+   * @returns true if store switch was successful
+   */
+  async switchStore(storeId: number): Promise<boolean> {
+    try {
+      console.log(`  Setting ActiveStore cookie to ${storeId}`);
+
+      // Directly set the ActiveStore cookie
+      // The NYP system uses this cookie to determine which store context to use
+      this.cookies.set('ActiveStore', storeId.toString());
+
+      console.log(`  ActiveStore cookie set to: ${this.cookies.get('ActiveStore')}`);
+
+      // Verify the switch worked by checking a page
+      console.log(`  Verifying switch by checking /Store page`);
+
+      const verifyResponse = await this.request({
+        method: 'GET',
+        endpoint: '/Store',
+      });
+
+      console.log(`  Verify response status: ${verifyResponse.status}`);
+
+      if (!verifyResponse.ok) {
+        console.log(`  Verification request failed`);
+        return false;
+      }
+
+      const html = await verifyResponse.text();
+
+      // Save HTML to file for debugging
+      if (typeof require !== 'undefined') {
+        try {
+          const fs = await import('fs');
+          const path = await import('path');
+          const debugFile = path.join('/tmp', `nyp-store-${storeId}.html`);
+          await fs.promises.writeFile(debugFile, html, 'utf-8');
+          console.log(`  Saved response HTML to: ${debugFile}`);
+        } catch (err) {
+          console.log(`  Could not save HTML: ${err}`);
+        }
+      }
+
+      // Check which store is currently active (shown in the header)
+      const activeStoreMatch = html.match(/class="s4d-store-toggle"[^>]*>\s*([^<]+)<\/a>/i);
+      if (activeStoreMatch) {
+        console.log(`  Currently active store from header: ${activeStoreMatch[1].trim()}`);
+      } else {
+        console.log(`  Could not find active store in header`);
+      }
+
+      // Extract the ActiveStore cookie value from any Set-Cookie headers
+      const activeStoreCookieValue = this.cookies.get('ActiveStore');
+      console.log(`  ActiveStore cookie value: ${activeStoreCookieValue}`);
+
+      // Check if the page shows the correct store ID in the dropdown
+      const containsStoreId = html.includes(`data-storeid="${storeId}"`);
+
+      console.log(`  Page contains store ID ${storeId}: ${containsStoreId}`);
+
+      // List all store IDs present in the HTML
+      const allStoreIds = Array.from(html.matchAll(/data-storeid="(\d+)"/g), m => m[1]);
+      console.log(`  All store IDs in page: ${allStoreIds.join(', ')}`);
+
+      return containsStoreId;
+    } catch (error) {
+      if (error instanceof SessionExpiredError) {
+        console.log(`  Session expired during store switch`);
+        return false;
+      }
+      console.error('  Store switch error:', error);
+      return false;
     }
   }
 

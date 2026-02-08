@@ -221,6 +221,66 @@ export interface UserProfile {
   restaurantId: string
   role: UserRole
   displayName: string | null
+  isAdmin: boolean
+  deletedAt: Date | null
   createdAt: Date
   updatedAt: Date
+}
+
+// Admin Management Types
+
+export interface AuditLog {
+  id: string
+  userId: string | null
+  userEmail: string | null
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT' | 'ACCESS'
+  resourceType: string
+  resourceId: string | null
+  oldValues: Record<string, unknown> | null
+  newValues: Record<string, unknown> | null
+  ipAddress: string | null
+  userAgent: string | null
+  createdAt: Date
+}
+
+export interface SystemSetting {
+  id: string
+  key: string
+  value: unknown
+  category: 'general' | 'email' | 'security' | 'features'
+  description: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface AuditLogFilters {
+  userId?: string
+  resourceType?: string
+  action?: string
+  startDate?: Date
+  endDate?: Date
+  limit?: number
+  offset?: number
+}
+
+export interface CreateUserProfileDto {
+  restaurantId: string
+  role: UserRole
+  displayName: string | null
+  isAdmin?: boolean
+}
+
+export interface UpdateUserProfileDto {
+  role?: UserRole
+  displayName?: string | null
+  isAdmin?: boolean
+  restaurantId?: string
+}
+
+export interface CreateRestaurantDto {
+  name: string
+}
+
+export interface UpdateRestaurantDto {
+  name?: string
 }
