@@ -5,6 +5,7 @@
  * Handles missing days gracefully.
  */
 
+import 'dotenv/config';
 import { createAdminClient } from '../lib/supabase/admin-client';
 import { NYPApiClient } from '../lib/services/nyp-api-client';
 import { parseOperationalReport } from '../lib/parsers/operational-report-parser';
