@@ -19,6 +19,7 @@
     "sentry:setup": "./scripts/setup-sentry.sh",
     "nyp:capture-cookies": "tsx scripts/capture-nyp-cookies.ts",
     "nyp:refresh-cookies": "curl -X GET http://localhost:3000/api/cron/refresh-cookies -H 'Authorization: Bearer nyp-kpi-cron-secret-2026'",
+    "nyp:bulk-import-2025": "tsx scripts/bulk-import-2025.ts",
     "test:parser": "tsx scripts/test-parser.ts",
     "test": "vitest",
     "test:ui": "vitest --ui",
