@@ -47,13 +47,15 @@ export function Sidebar() {
         return;
       }
 
-      const { data: profile } = await supabase
+      // Fetch all profiles for this user (they may have access to multiple restaurants)
+      const { data: profiles } = await supabase
         .from('user_profiles')
         .select('is_admin')
-        .eq('user_id', user.id)
-        .single();
+        .eq('user_id', user.id);
 
-      setIsAdmin(profile?.is_admin || false);
+      // User is admin if ANY of their profiles has is_admin = true
+      const isAdminUser = profiles?.some(p => p.is_admin) || false;
+      setIsAdmin(isAdminUser);
       setLoading(false);
     };
 
