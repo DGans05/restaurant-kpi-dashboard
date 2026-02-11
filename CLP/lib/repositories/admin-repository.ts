@@ -76,7 +76,12 @@ export interface UserManagementRepository {
   restoreUser(userId: string): Promise<void>
 
   /**
-   * Assign restaurant access to a user (or update existing access)
+   * Get all restaurant access rows for a single user
+   */
+  getRestaurantAccessForUser(userId: string): Promise<UserProfile[]>
+
+  /**
+   * Assign restaurant access to a user (upsert — adds if not present)
    */
   assignRestaurantAccess(
     userId: string,

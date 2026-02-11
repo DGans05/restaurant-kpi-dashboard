@@ -178,19 +178,48 @@ export class SupabaseUserManagementRepository
     }
   }
 
+  async getRestaurantAccessForUser(userId: string): Promise<UserProfile[]> {
+    const { data, error } = await this.supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw new Error(`Failed to fetch restaurant access: ${error.message}`)
+    }
+
+    return (data || []).map(this.mapUserProfile)
+  }
+
   async assignRestaurantAccess(
     userId: string,
     restaurantId: string,
     role: UserRole
   ): Promise<UserProfile> {
-    // Update existing profile
+    // Get display_name and is_admin from an existing profile row for this user
+    const { data: existing } = await this.supabase
+      .from('user_profiles')
+      .select('display_name, is_admin')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .limit(1)
+      .single()
+
     const { data, error } = await this.supabase
       .from('user_profiles')
-      .update({
-        restaurant_id: restaurantId,
-        role,
-      })
-      .eq('user_id', userId)
+      .upsert(
+        {
+          user_id: userId,
+          restaurant_id: restaurantId,
+          role,
+          display_name: existing?.display_name ?? null,
+          is_admin: existing?.is_admin ?? false,
+          deleted_at: null,
+        },
+        { onConflict: 'user_id,restaurant_id', ignoreDuplicates: false }
+      )
       .select()
       .single()
 

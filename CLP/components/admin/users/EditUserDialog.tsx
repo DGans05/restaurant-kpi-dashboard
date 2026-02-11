@@ -3,10 +3,10 @@
 /**
  * Edit User Dialog Component
  *
- * Form to update user profile details (role, display name, admin status, restaurant).
+ * Updates user profile details. Manages restaurant access with add/remove.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { UserProfile, Restaurant, UserRole } from '@/lib/types'
 import {
   Dialog,
@@ -27,6 +27,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Plus, Trash2 } from 'lucide-react'
+
+interface RestaurantAccess {
+  restaurantId: string
+  role: UserRole
+}
 
 interface EditUserDialogProps {
   user: UserProfile
@@ -36,13 +42,6 @@ interface EditUserDialogProps {
   onUserUpdated: (user: UserProfile) => void
 }
 
-interface EditUserForm {
-  displayName: string
-  restaurantId: string
-  role: UserRole
-  isAdmin: boolean
-}
-
 export function EditUserDialog({
   user,
   restaurants,
@@ -50,20 +49,42 @@ export function EditUserDialog({
   onOpenChange,
   onUserUpdated,
 }: EditUserDialogProps) {
-  const [formData, setFormData] = useState<EditUserForm>({
-    displayName: user.displayName || '',
-    restaurantId: user.restaurantId,
-    role: user.role,
-    isAdmin: user.isAdmin,
-  })
+  const [displayName, setDisplayName] = useState(user.displayName || '')
+  const [isAdmin, setIsAdmin] = useState(user.isAdmin)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleChange = (field: keyof EditUserForm, value: string | boolean) => {
-    setFormData({ ...formData, [field]: value })
-  }
+  // Restaurant access state
+  const [accessList, setAccessList] = useState<RestaurantAccess[]>([])
+  const [accessLoading, setAccessLoading] = useState(false)
+  const [addRestaurantId, setAddRestaurantId] = useState('')
+  const [addRole, setAddRole] = useState<UserRole>('viewer')
+  const [addingRestaurant, setAddingRestaurant] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Load current restaurant access on open
+  useEffect(() => {
+    if (!open) return
+    setAccessLoading(true)
+    fetch(`/api/admin/users/${user.userId}/restaurants`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success) {
+          setAccessList(
+            (json.data as UserProfile[]).map((p) => ({
+              restaurantId: p.restaurantId,
+              role: p.role,
+            }))
+          )
+        }
+      })
+      .catch(() => {/* non-blocking */})
+      .finally(() => setAccessLoading(false))
+  }, [open, user.userId])
+
+  const assignedRestaurantIds = new Set(accessList.map((a) => a.restaurantId))
+  const availableToAdd = restaurants.filter((r) => !assignedRestaurantIds.has(r.id))
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
@@ -73,10 +94,8 @@ export function EditUserDialog({
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          displayName: formData.displayName || null,
-          restaurantId: formData.restaurantId,
-          role: formData.role,
-          isAdmin: formData.isAdmin,
+          displayName: displayName || null,
+          isAdmin,
         }),
       })
 
@@ -95,84 +114,183 @@ export function EditUserDialog({
     }
   }
 
+  const handleAddRestaurant = async () => {
+    if (!addRestaurantId) return
+    setAddingRestaurant(true)
+    setError(null)
+
+    try {
+      const res = await fetch(`/api/admin/users/${user.userId}/restaurants`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ restaurantId: addRestaurantId, role: addRole }),
+      })
+
+      if (!res.ok) {
+        const d = await res.json()
+        throw new Error(d.error || 'Failed to add restaurant')
+      }
+
+      setAccessList([...accessList, { restaurantId: addRestaurantId, role: addRole }])
+      setAddRestaurantId('')
+      setAddRole('viewer')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add restaurant')
+    } finally {
+      setAddingRestaurant(false)
+    }
+  }
+
+  const handleRemoveRestaurant = async (restaurantId: string) => {
+    setError(null)
+    try {
+      const res = await fetch(
+        `/api/admin/users/${user.userId}/restaurants/${restaurantId}`,
+        { method: 'DELETE' }
+      )
+
+      if (!res.ok) {
+        const d = await res.json()
+        throw new Error(d.error || 'Failed to remove restaurant')
+      }
+
+      setAccessList(accessList.filter((a) => a.restaurantId !== restaurantId))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove restaurant')
+    }
+  }
+
+  const getRestaurantName = (id: string) =>
+    restaurants.find((r) => r.id === id)?.name ?? id
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[540px]">
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
-            Update user profile and permissions
+            Update profile and manage restaurant access
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
+        <form onSubmit={handleSaveProfile}>
+          <div className="space-y-5 py-4">
             {error && (
               <div className="bg-destructive/10 text-destructive px-3 py-2 rounded-md text-sm">
                 {error}
               </div>
             )}
 
+            {/* Display name */}
             <div className="space-y-2">
               <Label htmlFor="edit-displayName">Display Name</Label>
               <Input
                 id="edit-displayName"
-                value={formData.displayName}
-                onChange={(e) => handleChange('displayName', e.target.value)}
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="John Doe"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="edit-restaurant">Restaurant</Label>
-              <Select
-                value={formData.restaurantId}
-                onValueChange={(value) => handleChange('restaurantId', value)}
-              >
-                <SelectTrigger id="edit-restaurant">
-                  <SelectValue placeholder="Select restaurant" />
-                </SelectTrigger>
-                <SelectContent>
-                  {restaurants.map((restaurant) => (
-                    <SelectItem key={restaurant.id} value={restaurant.id}>
-                      {restaurant.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-role">Role</Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value) => handleChange('role', value as UserRole)}
-              >
-                <SelectTrigger id="edit-role">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="owner">Owner</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="viewer">Viewer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
+            {/* Admin checkbox */}
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="edit-isAdmin"
-                checked={formData.isAdmin}
-                onCheckedChange={(checked) =>
-                  handleChange('isAdmin', checked === true)
-                }
+                checked={isAdmin}
+                onCheckedChange={(checked) => setIsAdmin(checked === true)}
               />
               <Label
                 htmlFor="edit-isAdmin"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm font-medium leading-none"
               >
                 System Administrator (full access)
               </Label>
+            </div>
+
+            {/* Restaurant access */}
+            <div className="space-y-3">
+              <Label>Restaurant Access</Label>
+
+              {accessLoading ? (
+                <p className="text-xs text-muted-foreground">Loading…</p>
+              ) : (
+                <>
+                  {/* Current access list */}
+                  {accessList.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic">
+                      No restaurants assigned yet
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {accessList.map((access) => (
+                        <div
+                          key={access.restaurantId}
+                          className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2"
+                        >
+                          <span className="flex-1 text-sm font-medium text-foreground">
+                            {getRestaurantName(access.restaurantId)}
+                          </span>
+                          <span className="text-xs text-muted-foreground capitalize">
+                            {access.role}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveRestaurant(access.restaurantId)}
+                            className="text-muted-foreground hover:text-destructive transition-colors"
+                            title="Remove access"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add new restaurant */}
+                  {availableToAdd.length > 0 && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <Select
+                        value={addRestaurantId}
+                        onValueChange={setAddRestaurantId}
+                      >
+                        <SelectTrigger className="flex-1 h-8 text-xs">
+                          <SelectValue placeholder="Add restaurant…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableToAdd.map((r) => (
+                            <SelectItem key={r.id} value={r.id}>
+                              {r.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={addRole}
+                        onValueChange={(v) => setAddRole(v as UserRole)}
+                      >
+                        <SelectTrigger className="w-28 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="owner">Owner</SelectItem>
+                          <SelectItem value="manager">Manager</SelectItem>
+                          <SelectItem value="viewer">Viewer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        className="h-8 px-2"
+                        disabled={!addRestaurantId || addingRestaurant}
+                        onClick={handleAddRestaurant}
+                      >
+                        <Plus className="size-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
@@ -186,7 +304,7 @@ export function EditUserDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Changes'}
+              {loading ? 'Saving…' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </form>
