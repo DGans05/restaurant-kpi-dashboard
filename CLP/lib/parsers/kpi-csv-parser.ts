@@ -14,41 +14,61 @@ const SUMMARY_KEYWORDS = [
   "subtotaal",
 ];
 
+// Keywords that indicate a header row
+const HEADER_KEYWORDS = ["datum", "date", "dag", "day", "omzet", "revenue"];
+
 /**
- * Parse a KPI CSV buffer into daily KPI entries.
+ * Parse a KPI CSV/Excel buffer into daily KPI entries.
+ * Reads ALL sheets and merges results (deduplicates by date).
  */
 export function parseKpiCsv(
   buffer: Buffer
 ): ParsedKPIEntry[] {
   const workbook = XLSX.read(buffer, { type: "buffer" });
 
-  const sheetName = workbook.SheetNames[0];
-  if (!sheetName) {
+  if (workbook.SheetNames.length === 0) {
     return [];
   }
 
-  const worksheet = workbook.Sheets[sheetName];
+  const allEntries = new Map<string, ParsedKPIEntry>();
 
+  for (const sheetName of workbook.SheetNames) {
+    const worksheet = workbook.Sheets[sheetName];
+    const entries = parseSheet(worksheet);
+    for (const entry of entries) {
+      allEntries.set(entry.date, entry);
+    }
+  }
+
+  return Array.from(allEntries.values()).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function parseSheet(worksheet: XLSX.WorkSheet): ParsedKPIEntry[] {
   // Get raw rows to find header row
   const rawRowsArray = XLSX.utils.sheet_to_json<any[]>(worksheet, {
     header: 1,
     defval: null,
   });
 
-  // Find the header row (contains "Datum" or "Date")
+  // Find the header row — check first 20 rows for any header keyword
   let headerRowIndex = -1;
-  for (let i = 0; i < Math.min(10, rawRowsArray.length); i++) {
+  for (let i = 0; i < Math.min(20, rawRowsArray.length); i++) {
     const row = rawRowsArray[i];
-    if (row && row.some((cell: any) =>
-      typeof cell === 'string' && (cell.includes('Datum') || cell.includes('Date'))
-    )) {
+    if (!row) continue;
+    const hasHeader = row.some((cell: unknown) => {
+      if (typeof cell !== 'string') return false;
+      const lower = cell.toLowerCase().trim();
+      return HEADER_KEYWORDS.some((kw) => lower.includes(kw));
+    });
+    if (hasHeader) {
       headerRowIndex = i;
       break;
     }
   }
 
+  // No header found — skip this sheet silently
   if (headerRowIndex === -1) {
-    throw new Error("Could not find a valid header row in the CSV.");
+    return [];
   }
 
   // Parse from the header row onwards
