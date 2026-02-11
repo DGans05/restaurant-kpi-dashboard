@@ -15,6 +15,7 @@ export interface KPIEntry {
   plannedRevenue: number;
   grossRevenue: number;
   netRevenue: number;
+  burgerKitchenRevenue: number;
 
   // Labour
   plannedLabourCost: number;
@@ -30,6 +31,7 @@ export interface KPIEntry {
 
   // Delivery
   deliveryRate30min: number; // % delivered within 30 min
+  deliveryRate20min: number; // % delivered within 20 min
   onTimeDeliveryMins: number; // OTD in minutes
   makeTimeMins: number;
   driveTimeMins: number;
@@ -49,6 +51,7 @@ export interface KPISummary {
   totalNetRevenue: number;
   totalPlannedRevenue: number;
   revenueVariance: number; // % difference
+  totalBurgerKitchenRevenue: number;
 
   // Labour (plan vs actual)
   avgLabourPct: number;
@@ -74,10 +77,24 @@ export interface KPISummary {
 export interface ChartDataPoint {
   date: string;
   netRevenue: number;
+  grossRevenue: number;
   plannedRevenue: number;
   labourCost: number;
   plannedLabourCost: number;
   labourPct: number;
+}
+
+export interface WorkedHoursDataPoint {
+  date: string;
+  workedHours: number;
+  labourProductivity: number;
+}
+
+export interface MakeTimeDataPoint {
+  date: string;
+  makeTimeMins: number;
+  driveTimeMins: number;
+  onTimeDeliveryMins: number;
 }
 
 export interface DeliveryDataPoint {
@@ -283,4 +300,33 @@ export interface CreateRestaurantDto {
 
 export interface UpdateRestaurantDto {
   name?: string
+}
+
+// Bezorg Service Dashboard types
+
+export interface BezorgSummary {
+  avgDeliveryRate30min: number;
+  avgDeliveryRate20min: number;
+  avgOnTimeDeliveryMins: number;
+  avgMakeTimeMins: number;
+  avgDriveTimeMins: number;
+  avgOrdersPerRun: number;
+  totalOrders: number;
+}
+
+export interface BezorgChartDataPoint {
+  date: string;
+  deliveryRate30min: number;
+  deliveryRate20min: number;
+  onTimeDeliveryMins: number;
+  makeTimeMins: number;
+  driveTimeMins: number;
+  ordersPerRun: number;
+}
+
+export interface PostcodeDeliveryData {
+  postcode: string;
+  avgDeliveryMins: number;
+  orderCount: number;
+  deliveryRate30min: number;
 }

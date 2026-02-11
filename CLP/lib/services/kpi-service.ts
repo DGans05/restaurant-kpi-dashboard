@@ -8,6 +8,8 @@ import type {
   DeliveryDataPoint,
   DeliverySummary,
   PeriodComparison,
+  WorkedHoursDataPoint,
+  MakeTimeDataPoint,
 } from "@/lib/types";
 
 /**
@@ -55,6 +57,10 @@ export const getKPISummary = cache(
       const totalFoodCost = entries.reduce((sum, e) => sum + e.foodCost, 0);
       const totalOrders = entries.reduce((sum, e) => sum + e.orderCount, 0);
       const totalHours = entries.reduce((sum, e) => sum + e.workedHours, 0);
+      const totalBurgerKitchenRevenue = entries.reduce(
+        (sum, e) => sum + e.burgerKitchenRevenue,
+        0
+      );
 
       const avgLabourPct =
         totalNetRevenue > 0 ? (totalLabourCost / totalNetRevenue) * 100 : 0;
@@ -86,6 +92,7 @@ export const getKPISummary = cache(
         totalNetRevenue,
         totalPlannedRevenue,
         revenueVariance,
+        totalBurgerKitchenRevenue,
         avgLabourPct,
         avgPlannedLabourPct,
         labourVariance,
@@ -119,6 +126,7 @@ export const getChartData = cache(
       return entries.map((e) => ({
         date: e.date,
         netRevenue: e.netRevenue,
+        grossRevenue: e.grossRevenue,
         plannedRevenue: e.plannedRevenue,
         labourCost: e.labourCost,
         plannedLabourCost: e.plannedLabourCost,
@@ -221,6 +229,55 @@ export function computePeriodComparison(
     primeCostChange: current.avgPrimeCostPct - previous.avgPrimeCostPct,
   };
 }
+
+/**
+ * Get worked hours and productivity data for a date range
+ */
+export const getWorkedHoursData = cache(
+  async (
+    start: Date,
+    end: Date,
+    restaurantId?: string
+  ): Promise<WorkedHoursDataPoint[]> => {
+    try {
+      const entries = await getKPIEntries(start, end, restaurantId);
+
+      return entries.map((e) => ({
+        date: e.date,
+        workedHours: e.workedHours,
+        labourProductivity: e.labourProductivity,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch worked hours data:", error);
+      throw new Error("Unable to load worked hours data. Please try again.");
+    }
+  }
+);
+
+/**
+ * Get make time and drive time data for a date range
+ */
+export const getMakeTimeData = cache(
+  async (
+    start: Date,
+    end: Date,
+    restaurantId?: string
+  ): Promise<MakeTimeDataPoint[]> => {
+    try {
+      const entries = await getKPIEntries(start, end, restaurantId);
+
+      return entries.map((e) => ({
+        date: e.date,
+        makeTimeMins: e.makeTimeMins,
+        driveTimeMins: e.driveTimeMins,
+        onTimeDeliveryMins: e.onTimeDeliveryMins,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch make time data:", error);
+      throw new Error("Unable to load make time data. Please try again.");
+    }
+  }
+);
 
 /**
  * Get sparkline data (last 7 days ending at `end`).

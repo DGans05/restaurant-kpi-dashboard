@@ -31,14 +31,40 @@ async function checkAuthUsers() {
   }
 
   // Check user profiles
-  const { data: profiles } = await supabase
+  const { data: profiles, error: profilesError } = await supabase
     .from('user_profiles')
-    .select('user_id, display_name, is_admin, role')
+    .select('user_id, display_name, is_admin, role, deleted_at')
 
-  console.log('User profiles:')
+  if (profilesError) {
+    console.error('❌ Error fetching user profiles:', profilesError.message)
+    process.exit(1)
+  }
+
+  const profileMap = new Map<string, any[]>()
   for (const profile of profiles || []) {
-    const authUser = authData.users.find(u => u.id === profile.user_id)
-    console.log(`${authUser?.email || 'Unknown'}: ${profile.role}${profile.is_admin ? ' (ADMIN)' : ''}`)
+    if (!profileMap.has(profile.user_id)) {
+      profileMap.set(profile.user_id, [])
+    }
+    profileMap.get(profile.user_id)?.push(profile)
+  }
+
+  console.log('\nDetailed User profiles:')
+  for (const [userId, userProfiles] of profileMap.entries()) {
+    const authUser = authData.users.find(u => u.id === userId)
+    console.log(`\nUser: ${authUser?.email || 'Unknown'}`)
+    console.log(`  Auth ID: ${userId}`)
+    
+    if (userProfiles.length > 1) {
+      console.warn('⚠️  WARNING: Duplicate profile entries for this user ID!')
+    }
+
+    userProfiles.forEach((profile, index) => {
+      console.log(`  Profile ${index + 1}:`)
+      console.log(`    Display Name: ${profile.display_name}`)
+      console.log(`    Role: ${profile.role}`)
+      console.log(`    Is Admin: ${profile.is_admin ? 'Yes' : 'No'}`)
+      console.log(`    Deleted At: ${profile.deleted_at || 'Not deleted'}`)
+    })
   }
 }
 

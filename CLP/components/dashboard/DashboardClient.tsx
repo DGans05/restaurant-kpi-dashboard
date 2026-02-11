@@ -3,11 +3,14 @@
 import { useRouter, usePathname } from "next/navigation";
 import { KPISummaryCards } from "@/components/dashboard/KPISummaryCards";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
-import { LabourChart } from "@/components/dashboard/CostBreakdownChart";
+import { LabourChart } from "@/components/dashboard/LabourChart";
 import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
 import { RestaurantFilter } from "@/components/dashboard/RestaurantFilter";
 import { DeliveryPerformance } from "@/components/dashboard/DeliveryPerformance";
 import { ExportButton } from "@/components/dashboard/ExportButton";
+import { BurgerKitchenCard } from "@/components/dashboard/BurgerKitchenCard";
+import { WorkedHoursChart } from "@/components/dashboard/WorkedHoursChart";
+import { MakeTimeChart } from "@/components/dashboard/MakeTimeChart";
 import type {
   KPISummary,
   ChartDataPoint,
@@ -16,6 +19,8 @@ import type {
   Restaurant,
   PeriodComparison,
   KPISparklines,
+  WorkedHoursDataPoint,
+  MakeTimeDataPoint,
 } from "@/lib/types";
 
 interface DashboardClientProps {
@@ -28,6 +33,8 @@ interface DashboardClientProps {
   currentRestaurantId?: string;
   comparison?: PeriodComparison;
   sparklines?: KPISparklines;
+  workedHoursData?: WorkedHoursDataPoint[];
+  makeTimeData?: MakeTimeDataPoint[];
   startDate: string;
   endDate: string;
 }
@@ -42,6 +49,8 @@ export function DashboardClient({
   currentRestaurantId,
   comparison,
   sparklines,
+  workedHoursData,
+  makeTimeData,
   startDate,
   endDate,
 }: DashboardClientProps) {
@@ -97,10 +106,21 @@ export function DashboardClient({
       {/* KPI Cards */}
       <KPISummaryCards summary={summary} comparison={comparison} sparklines={sparklines} />
 
+      {/* BK Omzet Card (only show if there is BK revenue) */}
+      {summary.totalBurgerKitchenRevenue > 0 && (
+        <BurgerKitchenCard summary={summary} />
+      )}
+
       {/* Charts */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <RevenueChart data={chartData} />
         <LabourChart data={chartData} />
+      </div>
+
+      {/* Worked Hours & Make Time Charts */}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        {workedHoursData && <WorkedHoursChart data={workedHoursData} />}
+        {makeTimeData && <MakeTimeChart data={makeTimeData} />}
       </div>
 
       {/* Delivery Performance */}

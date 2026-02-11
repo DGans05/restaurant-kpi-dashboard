@@ -21,6 +21,7 @@ export const KPIEntrySchema = z.object({
   plannedRevenue: z.number().nonnegative(),
   grossRevenue: z.number().nonnegative(),
   netRevenue: z.number().nonnegative(),
+  burgerKitchenRevenue: z.number().nonnegative(),
 
   // Labour
   plannedLabourCost: z.number().nonnegative(),

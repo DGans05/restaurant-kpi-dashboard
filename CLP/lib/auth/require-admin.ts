@@ -29,26 +29,20 @@ export async function requireAdmin(): Promise<{
     throw new Error('Unauthorized: Authentication required')
   }
 
-  // Check if user is an admin
-  const { data: profile, error: profileError } = await supabase
+  // Check if user has an active admin profile (supports multi-restaurant users)
+  const { data: profiles, error: profileError } = await supabase
     .from('user_profiles')
-    .select('is_admin, deleted_at')
+    .select('is_admin')
     .eq('user_id', user.id)
-    .single()
+    .eq('is_admin', true)
+    .is('deleted_at', null)
+    .limit(1)
 
   if (profileError) {
     throw new Error('Failed to verify admin status')
   }
 
-  if (!profile) {
-    throw new Error('User profile not found')
-  }
-
-  if (profile.deleted_at) {
-    throw new Error('User account is deactivated')
-  }
-
-  if (!profile.is_admin) {
+  if (!profiles || profiles.length === 0) {
     throw new Error('Forbidden: Admin access required')
   }
 

@@ -12,33 +12,32 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import type { ChartDataPoint } from "@/lib/types";
-import { formatEUR, formatEuroAxis } from "@/lib/utils/formatters";
+import type { MakeTimeDataPoint } from "@/lib/types";
 import { cardStyles, tooltipContentStyle } from "@/lib/utils/styles";
 
-interface RevenueChartProps {
-  data: ChartDataPoint[];
+interface MakeTimeChartProps {
+  data: MakeTimeDataPoint[];
 }
 
-export function RevenueChart({ data }: RevenueChartProps) {
+export function MakeTimeChart({ data }: MakeTimeChartProps) {
   if (data.length === 0) {
     return (
       <div className={cardStyles}>
-        <h3 className="text-2xl font-display">OMZET</h3>
+        <h3 className="text-2xl font-display">MAAK- & RIJTIJD</h3>
         <p className="mt-2 text-sm text-muted-foreground">Geen data beschikbaar</p>
       </div>
     );
   }
 
   return (
-    <div className={`animate-fade-up animate-lift stagger-5 ${cardStyles}`}>
+    <div className={`animate-fade-up animate-lift stagger-8 ${cardStyles}`}>
       <div className="mb-6 flex items-baseline justify-between">
         <div>
           <h3 className="text-2xl font-display text-foreground">
-            OMZET
+            MAAK- &amp; RIJTIJD
           </h3>
           <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground font-medium">
-            Dagelijkse bruto/netto omzet vs plan
+            Dagelijkse maaktijd, rijtijd &amp; OTD (minuten)
           </p>
         </div>
       </div>
@@ -59,45 +58,48 @@ export function RevenueChart({ data }: RevenueChartProps) {
             interval="preserveStartEnd"
           />
           <YAxis
-            tickFormatter={formatEuroAxis}
+            tickFormatter={(v: number) => `${v.toFixed(0)}m`}
             tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
             tickLine={false}
             axisLine={false}
-            width={48}
+            width={40}
           />
           <Tooltip
             contentStyle={tooltipContentStyle}
             labelFormatter={(d) => format(parseISO(String(d)), "EEEE d MMM", { locale: nl })}
             formatter={(value, name) => {
-              const labels: { [key: string]: string } = {
-                netRevenue: "Netto Omzet",
-                grossRevenue: "Bruto Omzet",
-                plannedRevenue: "Plan"
+              const labels: Record<string, string> = {
+                makeTimeMins: "Maaktijd",
+                driveTimeMins: "Rijtijd",
+                onTimeDeliveryMins: "OTD",
               };
-              return [formatEUR(Number(value)), labels[name as string] || name];
+              return [`${Number(value).toFixed(1)} min`, labels[String(name)] || String(name)];
             }}
-            cursor={{ fill: "#009a44", opacity: 0.08 }}
+            cursor={{ fill: "#f3001d", opacity: 0.08 }}
           />
           <Bar
-            dataKey="grossRevenue"
-            fill="#a3e6b4"
+            dataKey="makeTimeMins"
+            name="makeTimeMins"
+            fill="#f3001d"
             radius={[6, 6, 0, 0]}
-            barSize={24}
-            stackId="a"
+            barSize={12}
+            stackId="times"
           />
           <Bar
-            dataKey="netRevenue"
-            fill="#009a44"
+            dataKey="driveTimeMins"
+            name="driveTimeMins"
+            fill="#ffa51d"
             radius={[6, 6, 0, 0]}
-            barSize={24}
-            stackId="a"
+            barSize={12}
+            stackId="times"
           />
           <Line
-            dataKey="plannedRevenue"
-            stroke="#ffda28"
-            strokeDasharray="5 5"
+            dataKey="onTimeDeliveryMins"
+            name="onTimeDeliveryMins"
+            stroke="#006dec"
             dot={false}
             strokeWidth={2.5}
+            strokeDasharray="5 5"
           />
         </ComposedChart>
       </ResponsiveContainer>

@@ -5,6 +5,8 @@ import {
   getDeliverySummary,
   computePeriodComparison,
   getSparklineData,
+  getWorkedHoursData,
+  getMakeTimeData,
 } from "@/lib/services/kpi-service";
 import { getAllRestaurants } from "@/lib/services/restaurant-service";
 import { PeriodViewSchema, ISOWeekSchema, ISOMonthSchema } from "@/lib/schemas";
@@ -54,7 +56,7 @@ export default async function DashboardPage({
   const { start: prevStart, end: prevEnd } = getPeriodDateRange(view, prevPeriodKey);
 
   // Server-side data fetching (parallel)
-  const [summary, chartData, deliverySummary, restaurants, prevSummary, sparklines] =
+  const [summary, chartData, deliverySummary, restaurants, prevSummary, sparklines, workedHoursData, makeTimeData] =
     await Promise.all([
       getKPISummary(start, end, restaurantId),
       getChartData(start, end, restaurantId),
@@ -62,6 +64,8 @@ export default async function DashboardPage({
       getAllRestaurants(),
       getKPISummary(prevStart, prevEnd, restaurantId),
       getSparklineData(end, restaurantId),
+      getWorkedHoursData(start, end, restaurantId),
+      getMakeTimeData(start, end, restaurantId),
     ]);
 
   const comparison = computePeriodComparison(summary, prevSummary);
@@ -77,6 +81,8 @@ export default async function DashboardPage({
       currentRestaurantId={restaurantId}
       comparison={comparison}
       sparklines={sparklines}
+      workedHoursData={workedHoursData}
+      makeTimeData={makeTimeData}
       startDate={start.toISOString().split("T")[0]}
       endDate={end.toISOString().split("T")[0]}
     />
