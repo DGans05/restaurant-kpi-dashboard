@@ -15,6 +15,7 @@ import {
   SupabaseRestaurantRepository,
 } from "./supabase-repository";
 import { ExcelDeliveryRepository } from "./excel-delivery-repository";
+import { SupabaseDeliveryRepository } from "./supabase-delivery-repository";
 import {
   SupabaseUserManagementRepository,
   SupabaseRestaurantManagementRepository,
@@ -64,8 +65,12 @@ export function getRestaurantRepository(): RestaurantRepository {
  */
 export function getDeliveryRepository(): DeliveryRepository {
   if (!deliveryRepo) {
-    const dataPath = process.env.EXCEL_DATA_PATH ?? "./data/rapportage";
-    deliveryRepo = new ExcelDeliveryRepository(dataPath);
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      deliveryRepo = new SupabaseDeliveryRepository();
+    } else {
+      const dataPath = process.env.EXCEL_DATA_PATH ?? "./data/rapportage";
+      deliveryRepo = new ExcelDeliveryRepository(dataPath);
+    }
   }
   return deliveryRepo;
 }

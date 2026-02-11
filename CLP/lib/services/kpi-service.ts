@@ -1,7 +1,8 @@
 import { cache } from "react";
-import { addDays, subDays } from "date-fns";
-import { getKPIRepository } from "@/lib/repositories";
+import { addDays, subDays, format } from "date-fns";
+import { getKPIRepository, getDeliveryRepository } from "@/lib/repositories";
 import type {
+  DeliveryOrder,
   KPIEntry,
   KPISummary,
   ChartDataPoint,
@@ -300,3 +301,21 @@ export const getSparklineData = cache(
     };
   }
 );
+
+/**
+ * Get top 30 longest delivery wait times for a month.
+ * Month is derived from the period end date.
+ */
+export async function getLongestWaitTimes(
+  end: Date,
+  restaurantId?: string
+): Promise<DeliveryOrder[]> {
+  try {
+    const repo = getDeliveryRepository();
+    const month = format(end, "yyyy-MM");
+    return repo.getLongestWaitTimes(month, 30, restaurantId);
+  } catch (error) {
+    console.error("Failed to fetch longest wait times:", error);
+    return [];
+  }
+}

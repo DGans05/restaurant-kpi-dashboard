@@ -23,6 +23,17 @@ import type {
   MakeTimeDataPoint,
 } from "@/lib/types";
 
+export interface SerializedDeliveryOrder {
+  orderNumber: string;
+  phoneNumber: string;
+  waitingTimeMins: number;
+  orderPlaced: string;
+  completed: string | null;
+  driverName: string | null;
+  address: string | null;
+  date: string;
+}
+
 interface DashboardClientProps {
   summary: KPISummary;
   chartData: ChartDataPoint[];
@@ -37,6 +48,8 @@ interface DashboardClientProps {
   makeTimeData?: MakeTimeDataPoint[];
   startDate: string;
   endDate: string;
+  longestWaitTimes?: SerializedDeliveryOrder[];
+  currentMonth?: string;
 }
 
 export function DashboardClient({
@@ -53,6 +66,8 @@ export function DashboardClient({
   makeTimeData,
   startDate,
   endDate,
+  longestWaitTimes,
+  currentMonth,
 }: DashboardClientProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -124,7 +139,11 @@ export function DashboardClient({
       </div>
 
       {/* Delivery Performance */}
-      <DeliveryPerformance summary={deliverySummary} />
+      <DeliveryPerformance
+        summary={deliverySummary}
+        longestWaitTimes={longestWaitTimes}
+        currentMonth={currentMonth}
+      />
     </div>
   );
 }

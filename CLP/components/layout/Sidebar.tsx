@@ -14,6 +14,7 @@ import {
   PenSquare,
   CalendarRange,
   FileUp,
+  Truck,
   Settings,
   Shield,
   LogOut,
@@ -28,6 +29,7 @@ const menuItems = [
   { label: "KPI Invoer", href: "/kpis/new", icon: PenSquare },
   { label: "CSV Import", href: "/kpis/import", icon: FileUp },
   { label: "Bulk Planning", href: "/kpis/bulk-planned", icon: CalendarRange },
+  { label: "Bezorg Import", href: "/delivery/import", icon: Truck },
   { label: "Admin", href: "/admin", icon: Shield, adminOnly: true },
   { label: "Settings", href: "/admin/settings", icon: Settings, adminOnly: true },
 ];

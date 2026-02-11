@@ -7,6 +7,7 @@ import {
   getSparklineData,
   getWorkedHoursData,
   getMakeTimeData,
+  getLongestWaitTimes,
 } from "@/lib/services/kpi-service";
 import { getAllRestaurants } from "@/lib/services/restaurant-service";
 import { PeriodViewSchema, ISOWeekSchema, ISOMonthSchema } from "@/lib/schemas";
@@ -17,7 +18,8 @@ import {
   getPeriodDateRange,
   getPreviousPeriodKey,
 } from "@/lib/utils/period-dates";
-import type { PeriodView } from "@/lib/types";
+import type { PeriodView, DeliveryOrder } from "@/lib/types";
+import { format } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +58,7 @@ export default async function DashboardPage({
   const { start: prevStart, end: prevEnd } = getPeriodDateRange(view, prevPeriodKey);
 
   // Server-side data fetching (parallel)
-  const [summary, chartData, deliverySummary, restaurants, prevSummary, sparklines, workedHoursData, makeTimeData] =
+  const [summary, chartData, deliverySummary, restaurants, prevSummary, sparklines, workedHoursData, makeTimeData, longestWaitTimes] =
     await Promise.all([
       getKPISummary(start, end, restaurantId),
       getChartData(start, end, restaurantId),
@@ -66,9 +68,19 @@ export default async function DashboardPage({
       getSparklineData(end, restaurantId),
       getWorkedHoursData(start, end, restaurantId),
       getMakeTimeData(start, end, restaurantId),
+      getLongestWaitTimes(end, restaurantId),
     ]);
 
   const comparison = computePeriodComparison(summary, prevSummary);
+
+  // Serialize DeliveryOrder dates for client component boundary
+  const serializedWaitTimes = longestWaitTimes.map((o) => ({
+    ...o,
+    orderPlaced: o.orderPlaced.toISOString(),
+    completed: o.completed?.toISOString() ?? null,
+  }));
+
+  const currentMonth = format(end, "yyyy-MM");
 
   return (
     <DashboardClient
@@ -85,6 +97,8 @@ export default async function DashboardPage({
       makeTimeData={makeTimeData}
       startDate={start.toISOString().split("T")[0]}
       endDate={end.toISOString().split("T")[0]}
+      longestWaitTimes={serializedWaitTimes}
+      currentMonth={currentMonth}
     />
   );
 }
