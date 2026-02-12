@@ -13,7 +13,7 @@ import {
 import { nl } from "date-fns/locale";
 import type { PeriodView } from "@/lib/types";
 
-const EARLIEST_MONTH = "2025-09";
+const EARLIEST_MONTH = "2025-01";
 
 /**
  * Parse an ISO week string (e.g. "2026-W06") into the Monday of that week.

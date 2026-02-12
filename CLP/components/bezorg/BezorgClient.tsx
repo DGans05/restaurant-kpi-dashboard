@@ -1,27 +1,20 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { KPISummaryCards } from "@/components/dashboard/KPISummaryCards";
-import { RevenueChart } from "@/components/dashboard/RevenueChart";
-import { LabourChart } from "@/components/dashboard/LabourChart";
 import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
 import { RestaurantFilter } from "@/components/dashboard/RestaurantFilter";
-import { DeliveryPerformance } from "@/components/dashboard/DeliveryPerformance";
-import { ExportButton } from "@/components/dashboard/ExportButton";
 import { DashboardViewToggle } from "@/components/dashboard/DashboardViewToggle";
-import { BurgerKitchenCard } from "@/components/dashboard/BurgerKitchenCard";
-import { WorkedHoursChart } from "@/components/dashboard/WorkedHoursChart";
-import { MakeTimeChart } from "@/components/dashboard/MakeTimeChart";
+import { BezorgSummaryCards } from "@/components/bezorg/BezorgSummaryCards";
+import { DeliveryRateChart } from "@/components/bezorg/DeliveryRateChart";
+import { TimeBreakdownChart } from "@/components/bezorg/TimeBreakdownChart";
+import { PostcodeTable } from "@/components/bezorg/PostcodeTable";
+import { PostcodeMap } from "@/components/bezorg/PostcodeMap";
 import type {
-  KPISummary,
-  ChartDataPoint,
-  DeliverySummary,
+  BezorgSummary,
+  BezorgChartDataPoint,
   PeriodView,
   Restaurant,
-  PeriodComparison,
-  KPISparklines,
-  WorkedHoursDataPoint,
-  MakeTimeDataPoint,
+  DeliveryOrder,
 } from "@/lib/types";
 
 export interface SerializedDeliveryOrder {
@@ -35,41 +28,27 @@ export interface SerializedDeliveryOrder {
   date: string;
 }
 
-interface DashboardClientProps {
-  summary: KPISummary;
-  chartData: ChartDataPoint[];
-  deliverySummary: DeliverySummary;
+interface BezorgClientProps {
+  summary: BezorgSummary;
+  chartData: BezorgChartDataPoint[];
   view: PeriodView;
   periodKey: string;
   restaurants: Restaurant[];
   currentRestaurantId?: string;
-  comparison?: PeriodComparison;
-  sparklines?: KPISparklines;
-  workedHoursData?: WorkedHoursDataPoint[];
-  makeTimeData?: MakeTimeDataPoint[];
-  startDate: string;
-  endDate: string;
   longestWaitTimes?: SerializedDeliveryOrder[];
   currentMonth?: string;
 }
 
-export function DashboardClient({
+export function BezorgClient({
   summary,
   chartData,
-  deliverySummary,
   view,
   periodKey,
   restaurants,
   currentRestaurantId,
-  comparison,
-  sparklines,
-  workedHoursData,
-  makeTimeData,
-  startDate,
-  endDate,
   longestWaitTimes,
   currentMonth,
-}: DashboardClientProps) {
+}: BezorgClientProps) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -86,12 +65,18 @@ export function DashboardClient({
     router.push(`${pathname}?${params.toString()}`);
   };
 
+  const modalOrders: DeliveryOrder[] = (longestWaitTimes ?? []).map((o) => ({
+    ...o,
+    orderPlaced: new Date(o.orderPlaced),
+    completed: o.completed ? new Date(o.completed) : null,
+  }));
+
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       {/* Page Header */}
       <div className="animate-fade-up flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <DashboardViewToggle
-          active="kern"
+          active="service"
           restaurantSuffix={
             currentRestaurantId
               ? restaurants.find((r) => r.id === currentRestaurantId)?.name || "Unknown"
@@ -103,11 +88,6 @@ export function DashboardClient({
             restaurants={restaurants}
             currentRestaurantId={currentRestaurantId}
           />
-          <ExportButton
-            startDate={startDate}
-            endDate={endDate}
-            restaurantId={currentRestaurantId}
-          />
           <PeriodSelector
             view={view}
             periodKey={periodKey}
@@ -116,32 +96,24 @@ export function DashboardClient({
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <KPISummaryCards summary={summary} comparison={comparison} sparklines={sparklines} />
-
-      {/* BK Omzet Card (only show if there is BK revenue) */}
-      {summary.totalBurgerKitchenRevenue > 0 && (
-        <BurgerKitchenCard summary={summary} />
-      )}
+      {/* Summary Cards */}
+      <BezorgSummaryCards
+        summary={summary}
+        longestWaitTimes={modalOrders}
+        currentMonth={currentMonth}
+      />
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <RevenueChart data={chartData} />
-        <LabourChart data={chartData} />
+        <DeliveryRateChart data={chartData} />
+        <TimeBreakdownChart data={chartData} />
       </div>
 
-      {/* Worked Hours & Make Time Charts */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        {workedHoursData && <WorkedHoursChart data={workedHoursData} />}
-        {makeTimeData && <MakeTimeChart data={makeTimeData} />}
-      </div>
+      {/* Postcode Map */}
+      <PostcodeMap />
 
-      {/* Delivery Performance */}
-      <DeliveryPerformance
-        summary={deliverySummary}
-        longestWaitTimes={longestWaitTimes}
-        currentMonth={currentMonth}
-      />
+      {/* Postcode Table */}
+      <PostcodeTable data={[]} />
     </div>
   );
 }

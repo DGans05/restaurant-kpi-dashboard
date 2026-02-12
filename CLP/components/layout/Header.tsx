@@ -1,19 +1,42 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Search, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const PAGE_TITLES: Record<string, string> = {
+  "/dashboard": "DASHBOARD",
+  "/restaurants": "RESTAURANTS",
+  "/reports": "REPORTS",
+  "/kpis/new": "KPI INVOER",
+  "/kpis/import": "CSV IMPORT",
+  "/kpis/bulk-planned": "BULK PLANNING",
+  "/bezorg": "BEZORG SERVICE",
+  "/delivery/import": "BEZORG IMPORT",
+  "/admin": "ADMIN",
+  "/admin/settings": "INSTELLINGEN",
+};
 
 function getInitials(email: string): string {
   const localPart = email.split("@")[0] ?? "";
   return localPart.slice(0, 2).toUpperCase();
 }
 
+function getPageTitle(pathname: string): string {
+  if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
+  // Try prefix match for nested routes
+  const match = Object.entries(PAGE_TITLES).find(([path]) =>
+    pathname.startsWith(path + "/")
+  );
+  return match ? match[1] : "DASHBOARD";
+}
+
 export function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,7 +62,7 @@ export function Header() {
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background px-4 md:px-8">
       {/* Left: Page title / Greeting */}
       <div className="flex items-center gap-2 pl-10 md:pl-0">
-        <h1 className="text-2xl font-display text-foreground">DASHBOARD</h1>
+        <h1 className="text-2xl font-display text-foreground">{getPageTitle(pathname)}</h1>
       </div>
 
       {/* Center: Search bar */}
