@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
 import { RestaurantFilter } from "@/components/dashboard/RestaurantFilter";
@@ -9,6 +10,7 @@ import { DeliveryRateChart } from "@/components/bezorg/DeliveryRateChart";
 import { TimeBreakdownChart } from "@/components/bezorg/TimeBreakdownChart";
 import { PostcodeTable } from "@/components/bezorg/PostcodeTable";
 import { PostcodeMap } from "@/components/bezorg/PostcodeMap";
+import { DashboardGrid } from "@/components/dashboard/DashboardGrid";
 import type {
   BezorgSummary,
   BezorgChartDataPoint,
@@ -71,6 +73,38 @@ export function BezorgClient({
     completed: o.completed ? new Date(o.completed) : null,
   }));
 
+  const widgets = useMemo(() => [
+    {
+      id: "bezorg-cards",
+      colSpan: "xl:col-span-2",
+      node: (
+        <BezorgSummaryCards
+          summary={summary}
+          longestWaitTimes={modalOrders}
+          currentMonth={currentMonth}
+        />
+      ),
+    },
+    {
+      id: "delivery-rate-chart",
+      node: <DeliveryRateChart data={chartData} />,
+    },
+    {
+      id: "time-breakdown-chart",
+      node: <TimeBreakdownChart data={chartData} />,
+    },
+    {
+      id: "postcode-map",
+      colSpan: "xl:col-span-2",
+      node: <PostcodeMap />,
+    },
+    {
+      id: "postcode-table",
+      colSpan: "xl:col-span-2",
+      node: <PostcodeTable data={[]} />,
+    },
+  ], [summary, modalOrders, currentMonth, chartData]);
+
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       {/* Page Header */}
@@ -96,24 +130,8 @@ export function BezorgClient({
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <BezorgSummaryCards
-        summary={summary}
-        longestWaitTimes={modalOrders}
-        currentMonth={currentMonth}
-      />
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <DeliveryRateChart data={chartData} />
-        <TimeBreakdownChart data={chartData} />
-      </div>
-
-      {/* Postcode Map */}
-      <PostcodeMap />
-
-      {/* Postcode Table */}
-      <PostcodeTable data={[]} />
+      {/* Draggable Grid */}
+      <DashboardGrid dashboardKey="service" widgets={widgets} />
     </div>
   );
 }

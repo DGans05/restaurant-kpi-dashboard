@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { KPISummaryCards } from "@/components/dashboard/KPISummaryCards";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
@@ -12,6 +13,7 @@ import { DashboardViewToggle } from "@/components/dashboard/DashboardViewToggle"
 import { BurgerKitchenCard } from "@/components/dashboard/BurgerKitchenCard";
 import { WorkedHoursChart } from "@/components/dashboard/WorkedHoursChart";
 import { MakeTimeChart } from "@/components/dashboard/MakeTimeChart";
+import { DashboardGrid } from "@/components/dashboard/DashboardGrid";
 import type {
   KPISummary,
   ChartDataPoint,
@@ -86,6 +88,56 @@ export function DashboardClient({
     router.push(`${pathname}?${params.toString()}`);
   };
 
+  const hasBK = summary.totalBurgerKitchenRevenue > 0;
+
+  const widgets = useMemo(() => {
+    const items = [
+      {
+        id: "kpi-cards",
+        colSpan: "xl:col-span-2",
+        node: <KPISummaryCards summary={summary} comparison={comparison} sparklines={sparklines} />,
+      },
+      ...(hasBK
+        ? [{
+            id: "bk-card",
+            node: <BurgerKitchenCard summary={summary} />,
+          }]
+        : []),
+      {
+        id: "revenue-chart",
+        node: <RevenueChart data={chartData} />,
+      },
+      {
+        id: "labour-chart",
+        node: <LabourChart data={chartData} />,
+      },
+      ...(workedHoursData
+        ? [{
+            id: "hours-chart",
+            node: <WorkedHoursChart data={workedHoursData} />,
+          }]
+        : []),
+      ...(makeTimeData
+        ? [{
+            id: "maketime-chart",
+            node: <MakeTimeChart data={makeTimeData} />,
+          }]
+        : []),
+      {
+        id: "delivery-perf",
+        colSpan: "xl:col-span-2",
+        node: (
+          <DeliveryPerformance
+            summary={deliverySummary}
+            longestWaitTimes={longestWaitTimes}
+            currentMonth={currentMonth}
+          />
+        ),
+      },
+    ];
+    return items;
+  }, [summary, comparison, sparklines, hasBK, chartData, workedHoursData, makeTimeData, deliverySummary, longestWaitTimes, currentMonth]);
+
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       {/* Page Header */}
@@ -116,32 +168,8 @@ export function DashboardClient({
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <KPISummaryCards summary={summary} comparison={comparison} sparklines={sparklines} />
-
-      {/* BK Omzet Card (only show if there is BK revenue) */}
-      {summary.totalBurgerKitchenRevenue > 0 && (
-        <BurgerKitchenCard summary={summary} />
-      )}
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <RevenueChart data={chartData} />
-        <LabourChart data={chartData} />
-      </div>
-
-      {/* Worked Hours & Make Time Charts */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        {workedHoursData && <WorkedHoursChart data={workedHoursData} />}
-        {makeTimeData && <MakeTimeChart data={makeTimeData} />}
-      </div>
-
-      {/* Delivery Performance */}
-      <DeliveryPerformance
-        summary={deliverySummary}
-        longestWaitTimes={longestWaitTimes}
-        currentMonth={currentMonth}
-      />
+      {/* Draggable Grid */}
+      <DashboardGrid dashboardKey="kern" widgets={widgets} />
     </div>
   );
 }

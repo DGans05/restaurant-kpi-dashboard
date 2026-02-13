@@ -107,6 +107,8 @@ export interface DeliveryDataPoint {
 
 export type PeriodView = "week" | "month";
 
+export type DashboardKey = "kern" | "service";
+
 // Individual delivery order (for modal)
 export interface DeliveryOrder {
   orderNumber: string;
