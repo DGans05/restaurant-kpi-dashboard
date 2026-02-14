@@ -1,0 +1,300 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-poppins);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+/* ─── New York Pizza Light Theme ─── */
+:root {
+  --radius: 1rem; /* 16px - NYP brand radius */
+  --background: #f5f5f5;
+  --foreground: #1d2532; /* NYP near-black */
+  --card: #ffffff;
+  --card-foreground: #1d2532;
+  --popover: #ffffff;
+  --popover-foreground: #1d2532;
+  --primary: #009a44; /* NYP Vibrant Green */
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #1d2532;
+  --muted: #f5f5f5;
+  --muted-foreground: #676f7c; /* NYP gray */
+  --accent: #009a44;
+  --accent-foreground: #ffffff;
+  --destructive: #f3001d; /* NYP Red */
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #009a44;
+
+  /* NYP Brand Color Palette */
+  --nyp-green: #009a44;
+  --nyp-yellow: #ffda28;
+  --nyp-yellow-dark: #ffc814;
+  --nyp-orange: #ffa51d;
+  --nyp-orange-dark: #ff8a00;
+  --nyp-red: #f3001d;
+  --nyp-red-light: #ff5050;
+  --nyp-blue: #006dec;
+  --nyp-blue-light: #288bff;
+
+  /* Chart Colors - NYP Brand */
+  --chart-1: #009a44; /* Green - Revenue, Positive */
+  --chart-2: #ffa51d; /* Orange - Labour, Costs */
+  --chart-3: #ffda28; /* Yellow - Targets, Highlights */
+  --chart-4: #f3001d; /* Red - Alerts, Negative */
+  --chart-5: #006dec; /* Blue - Info */
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1d2532;
+  --sidebar-primary: #009a44;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f5f5;
+  --sidebar-accent-foreground: #1d2532;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #009a44;
+}
+
+/* ─── New York Pizza Dark Theme ─── */
+.dark {
+  --background: #1d2532; /* NYP dark background */
+  --foreground: #ffffff;
+  --card: #2a3645; /* Slightly lighter for cards */
+  --card-foreground: #ffffff;
+  --popover: #2a3645;
+  --popover-foreground: #ffffff;
+  --primary: #009a44; /* NYP Vibrant Green */
+  --primary-foreground: #ffffff;
+  --secondary: #2a3645;
+  --secondary-foreground: #ffffff;
+  --muted: #2a3645;
+  --muted-foreground: #99a1ae; /* NYP gray scale */
+  --accent: #009a44;
+  --accent-foreground: #ffffff;
+  --destructive: #f3001d;
+  --border: #374151;
+  --input: #374151;
+  --ring: #009a44;
+
+  /* NYP Brand Colors (same in dark) */
+  --nyp-green: #009a44;
+  --nyp-yellow: #ffda28;
+  --nyp-yellow-dark: #ffc814;
+  --nyp-orange: #ffa51d;
+  --nyp-orange-dark: #ff8a00;
+  --nyp-red: #f3001d;
+  --nyp-red-light: #ff5050;
+  --nyp-blue: #006dec;
+  --nyp-blue-light: #288bff;
+
+  /* Chart Colors (same as light) */
+  --chart-1: #009a44;
+  --chart-2: #ffa51d;
+  --chart-3: #ffda28;
+  --chart-4: #f3001d;
+  --chart-5: #006dec;
+
+  --sidebar: #1d2532;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #009a44;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2a3645;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #374151;
+  --sidebar-ring: #009a44;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  /* Display Typography - Bebas Neue for headings and metrics */
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  h1 {
+    font-size: 3rem; /* 48px */
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    font-size: 2.25rem; /* 36px */
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    font-size: 1.5rem; /* 24px */
+  }
+
+  /* Tabular numbers for all numeric displays */
+  .metric-value, .tabular-nums {
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+}
+
+/* ─── Stagger Entrance Animations ─── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes lift {
+  from {
+    transform: translateY(0);
+    box-shadow: 0 24px 38px rgba(0,0,0,0.04), 0 9px 46px rgba(0,0,0,0.03), 0 11px 15px rgba(0,0,0,0.05);
+  }
+  to {
+    transform: translateY(-4px);
+    box-shadow: 0 32px 48px rgba(0,0,0,0.08), 0 12px 56px rgba(0,0,0,0.06), 0 14px 20px rgba(0,0,0,0.08);
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease both;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-lift {
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 32px 48px rgba(0,0,0,0.08), 0 12px 56px rgba(0,0,0,0.06), 0 14px 20px rgba(0,0,0,0.08);
+}
+
+.stagger-1 { animation-delay: 0ms; }
+.stagger-2 { animation-delay: 80ms; }
+.stagger-3 { animation-delay: 160ms; }
+.stagger-4 { animation-delay: 240ms; }
+.stagger-5 { animation-delay: 320ms; }
+.stagger-6 { animation-delay: 400ms; }
+.stagger-7 { animation-delay: 480ms; }
+.stagger-8 { animation-delay: 560ms; }
+
+/* ─── Custom Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* ─── Recharts Tooltip Override - NYP Styling ─── */
+.recharts-tooltip-wrapper {
+  filter: drop-shadow(0 8px 16px rgb(0 0 0 / 0.12));
+}
+
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  border-radius: 16px !important;
+}
+
+/* ─── Pulse Shimmer for Skeletons ─── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    color-mix(in oklch, var(--muted) 60%, var(--primary)) 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}

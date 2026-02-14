@@ -1,0 +1,45 @@
+name: Download Daily Reports
+
+# Runs every day at 6 AM UTC (7 AM CET / 8 AM CEST)
+on:
+  schedule:
+    - cron: '0 6 * * *'
+
+  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
+
+jobs:
+  download-reports:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download yesterday's report
+        run: |
+          echo "🔄 Downloading reports from NYP..."
+
+          response=$(curl -s -w "\n%{http_code}" -X GET \
+            "https://nypkpi.com/api/cron/download-reports" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+
+          echo "Response: $body"
+          echo "HTTP Status: $http_code"
+
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Reports downloaded successfully"
+          elif [ "$http_code" -eq 401 ]; then
+            echo "⚠️ Session expired - manual cookie refresh needed"
+            echo "Run: npm run nyp:capture-cookies"
+            exit 1
+          else
+            echo "❌ Download failed with status $http_code"
+            exit 1
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Daily report download failed!"
+          echo "Check: https://github.com/${{ github.repository }}/actions"

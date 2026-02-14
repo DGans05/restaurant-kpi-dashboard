@@ -1,0 +1,66 @@
+name: Weekly Health Check
+
+# Runs every Monday at 8 AM UTC
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check production site
+        run: |
+          echo "🏥 Running health checks..."
+
+          # Check if site is accessible
+          status=$(curl -s -o /dev/null -w "%{http_code}" https://nypkpi.com)
+
+          if [ "$status" -eq 200 ] || [ "$status" -eq 302 ] || [ "$status" -eq 307 ]; then
+            echo "✅ Site is accessible (Status: $status)"
+          else
+            echo "❌ Site returned status: $status"
+            exit 1
+          fi
+
+      - name: Test download-reports endpoint
+        run: |
+          echo "🧪 Testing download-reports endpoint..."
+
+          response=$(curl -s -w "\n%{http_code}" -X GET \
+            "https://nypkpi.com/api/cron/download-reports" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+
+          echo "Response: $body"
+          echo "HTTP Status: $http_code"
+
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ API endpoint healthy"
+          elif [ "$http_code" -eq 401 ]; then
+            echo "⚠️ COOKIES EXPIRED"
+            echo ""
+            echo "ACTION REQUIRED:"
+            echo "  1. Open terminal"
+            echo "  2. Run: npm run nyp:capture-cookies"
+            echo "  3. This refreshes your NYP session cookies"
+            echo ""
+            exit 1
+          else
+            echo "⚠️ API returned status $http_code"
+            exit 1
+          fi
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "✅ All systems operational!"
+          echo ""
+          echo "Dashboard: https://nypkpi.com"
+          echo "GitHub Actions: https://github.com/${{ github.repository }}/actions"
