@@ -79,7 +79,7 @@ export function CustomizeToolbar({
 
       {/* Floating panel */}
       {panelOpen && (
-        <div className="fixed right-8 top-24 z-[100] w-72 rounded-xl border border-border/60 bg-background/95 p-4 shadow-xl backdrop-blur-md">
+        <div className="fixed right-8 top-24 z-[9999] w-72 rounded-xl border border-border/60 bg-background/95 p-4 shadow-xl backdrop-blur-md">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold">Widgets</h3>
             <Button
