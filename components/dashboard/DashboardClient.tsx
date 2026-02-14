@@ -2,12 +2,19 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { KPISummaryCards } from "@/components/dashboard/KPISummaryCards";
+import { RevenueCard } from "@/components/dashboard/RevenueCard";
+import { LabourCostCard } from "@/components/dashboard/LabourCostCard";
+import { OrdersCard } from "@/components/dashboard/OrdersCard";
+import { ProductivityCard } from "@/components/dashboard/ProductivityCard";
+import { PrimeCostCard } from "@/components/dashboard/PrimeCostCard";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { LabourChart } from "@/components/dashboard/LabourChart";
 import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
 import { RestaurantFilter } from "@/components/dashboard/RestaurantFilter";
-import { DeliveryPerformance } from "@/components/dashboard/DeliveryPerformance";
+import { DeliveryRate30Card } from "@/components/dashboard/DeliveryRate30Card";
+import { OTDCard } from "@/components/dashboard/OTDCard";
+import { MakeTimeCard } from "@/components/dashboard/MakeTimeCard";
+import { DriveTimeCard } from "@/components/dashboard/DriveTimeCard";
 import { ExportButton } from "@/components/dashboard/ExportButton";
 import { DashboardViewToggle } from "@/components/dashboard/DashboardViewToggle";
 import { BurgerKitchenCard } from "@/components/dashboard/BurgerKitchenCard";
@@ -101,13 +108,61 @@ export function DashboardClient({
   const widgets = useMemo(() => {
     const items = [
       {
-        id: "kpi-cards",
-        label: "KPI Summary Cards",
+        id: "revenue-card",
+        label: "Netto Omzet",
         node: (
-          <KPISummaryCards
+          <RevenueCard
             summary={summary}
             comparison={comparison}
-            sparklines={sparklines}
+            sparklineData={sparklines?.revenue}
+            animationDelay="stagger-1"
+          />
+        ),
+      },
+      {
+        id: "labour-card",
+        label: "Arbeidskosten",
+        node: (
+          <LabourCostCard
+            summary={summary}
+            comparison={comparison}
+            sparklineData={sparklines?.labourPct}
+            animationDelay="stagger-2"
+          />
+        ),
+      },
+      {
+        id: "orders-card",
+        label: "Bestellingen",
+        node: (
+          <OrdersCard
+            summary={summary}
+            comparison={comparison}
+            sparklineData={sparklines?.orders}
+            animationDelay="stagger-3"
+          />
+        ),
+      },
+      {
+        id: "productivity-card",
+        label: "Productiviteit",
+        node: (
+          <ProductivityCard
+            summary={summary}
+            comparison={comparison}
+            sparklineData={sparklines?.productivity}
+            animationDelay="stagger-4"
+          />
+        ),
+      },
+      {
+        id: "prime-cost-card",
+        label: "Prime Cost",
+        node: (
+          <PrimeCostCard
+            summary={summary}
+            comparison={comparison}
+            animationDelay="stagger-5"
           />
         ),
       },
@@ -149,15 +204,30 @@ export function DashboardClient({
           ]
         : []),
       {
-        id: "delivery-perf",
-        label: "Delivery Performance",
+        id: "delivery-rate30-card",
+        label: "Bezorgd < 30 min",
+        node: <DeliveryRate30Card summary={deliverySummary} />,
+      },
+      {
+        id: "otd-card",
+        label: "OTD",
         node: (
-          <DeliveryPerformance
+          <OTDCard
             summary={deliverySummary}
             longestWaitTimes={longestWaitTimes}
             currentMonth={currentMonth}
           />
         ),
+      },
+      {
+        id: "maketime-card",
+        label: "Maaktijd",
+        node: <MakeTimeCard summary={deliverySummary} />,
+      },
+      {
+        id: "drivetime-card",
+        label: "Rijtijd",
+        node: <DriveTimeCard summary={deliverySummary} />,
       },
     ];
     return items;
