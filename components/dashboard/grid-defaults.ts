@@ -115,7 +115,12 @@ export const kernDefaultLayouts: Record<string, WidgetLayoutItem[]> = {
 // ── Service dashboard ────────────────────────────────────────
 
 export const serviceWidgetOrder = [
-  "bezorg-cards",
+  "bezorg-rate30-card",
+  "bezorg-rate20-card",
+  "bezorg-otd-card",
+  "bezorg-maketime-card",
+  "bezorg-drivetime-card",
+  "bezorg-orders-per-run-card",
   "delivery-rate-chart",
   "time-breakdown-chart",
   "postcode-map",
@@ -123,7 +128,12 @@ export const serviceWidgetOrder = [
 ];
 
 export const serviceWidgetMeta: WidgetMeta[] = [
-  { id: "bezorg-cards", label: "Bezorg Cards" },
+  { id: "bezorg-rate30-card", label: "Bezorgd < 30 min" },
+  { id: "bezorg-rate20-card", label: "Bezorgd < 20 min" },
+  { id: "bezorg-otd-card", label: "OTD" },
+  { id: "bezorg-maketime-card", label: "Maaktijd" },
+  { id: "bezorg-drivetime-card", label: "Rijtijd" },
+  { id: "bezorg-orders-per-run-card", label: "Orders / rit" },
   { id: "delivery-rate-chart", label: "Delivery Rate" },
   { id: "time-breakdown-chart", label: "Time Breakdown" },
   { id: "postcode-map", label: "Postcode Map" },
@@ -132,25 +142,46 @@ export const serviceWidgetMeta: WidgetMeta[] = [
 
 export const serviceDefaultLayouts: Record<string, WidgetLayoutItem[]> = {
   lg: [
-    { i: "bezorg-cards", x: 0, y: 0, w: 12, h: 5, minH: 4 },
-    { i: "delivery-rate-chart", x: 0, y: 5, w: 6, h: 5, minW: 4, minH: 4 },
-    { i: "time-breakdown-chart", x: 6, y: 5, w: 6, h: 5, minW: 4, minH: 4 },
-    { i: "postcode-map", x: 0, y: 10, w: 6, h: 5, minW: 4, minH: 4 },
-    { i: "postcode-table", x: 6, y: 10, w: 6, h: 5, minW: 4, minH: 4 },
+    // Bezorg cards — 6 across top
+    { i: "bezorg-rate30-card", x: 0, y: 0, w: 2, h: 3, minW: 2, minH: 3 },
+    { i: "bezorg-rate20-card", x: 2, y: 0, w: 2, h: 3, minW: 2, minH: 3 },
+    { i: "bezorg-otd-card", x: 4, y: 0, w: 2, h: 3, minW: 2, minH: 3 },
+    { i: "bezorg-maketime-card", x: 6, y: 0, w: 2, h: 3, minW: 2, minH: 3 },
+    { i: "bezorg-drivetime-card", x: 8, y: 0, w: 2, h: 3, minW: 2, minH: 3 },
+    { i: "bezorg-orders-per-run-card", x: 10, y: 0, w: 2, h: 3, minW: 2, minH: 3 },
+    // Charts
+    { i: "delivery-rate-chart", x: 0, y: 3, w: 6, h: 5, minW: 4, minH: 4 },
+    { i: "time-breakdown-chart", x: 6, y: 3, w: 6, h: 5, minW: 4, minH: 4 },
+    { i: "postcode-map", x: 0, y: 8, w: 6, h: 5, minW: 4, minH: 4 },
+    { i: "postcode-table", x: 6, y: 8, w: 6, h: 5, minW: 4, minH: 4 },
   ],
   md: [
-    { i: "bezorg-cards", x: 0, y: 0, w: 10, h: 5, minH: 4 },
-    { i: "delivery-rate-chart", x: 0, y: 5, w: 5, h: 5, minW: 3, minH: 4 },
-    { i: "time-breakdown-chart", x: 5, y: 5, w: 5, h: 5, minW: 3, minH: 4 },
-    { i: "postcode-map", x: 0, y: 10, w: 5, h: 5, minW: 3, minH: 4 },
-    { i: "postcode-table", x: 5, y: 10, w: 5, h: 5, minW: 3, minH: 4 },
+    // Bezorg cards — 3x2
+    { i: "bezorg-rate30-card", x: 0, y: 0, w: 4, h: 3, minW: 2, minH: 3 },
+    { i: "bezorg-rate20-card", x: 4, y: 0, w: 3, h: 3, minW: 2, minH: 3 },
+    { i: "bezorg-otd-card", x: 7, y: 0, w: 3, h: 3, minW: 2, minH: 3 },
+    { i: "bezorg-maketime-card", x: 0, y: 3, w: 4, h: 3, minW: 2, minH: 3 },
+    { i: "bezorg-drivetime-card", x: 4, y: 3, w: 3, h: 3, minW: 2, minH: 3 },
+    { i: "bezorg-orders-per-run-card", x: 7, y: 3, w: 3, h: 3, minW: 2, minH: 3 },
+    // Charts
+    { i: "delivery-rate-chart", x: 0, y: 6, w: 5, h: 5, minW: 3, minH: 4 },
+    { i: "time-breakdown-chart", x: 5, y: 6, w: 5, h: 5, minW: 3, minH: 4 },
+    { i: "postcode-map", x: 0, y: 11, w: 5, h: 5, minW: 3, minH: 4 },
+    { i: "postcode-table", x: 5, y: 11, w: 5, h: 5, minW: 3, minH: 4 },
   ],
   sm: [
-    { i: "bezorg-cards", x: 0, y: 0, w: 6, h: 5, minH: 4 },
-    { i: "delivery-rate-chart", x: 0, y: 5, w: 6, h: 5, minH: 4 },
-    { i: "time-breakdown-chart", x: 0, y: 10, w: 6, h: 5, minH: 4 },
-    { i: "postcode-map", x: 0, y: 15, w: 6, h: 5, minH: 4 },
-    { i: "postcode-table", x: 0, y: 20, w: 6, h: 5, minH: 4 },
+    // Bezorg cards stacked
+    { i: "bezorg-rate30-card", x: 0, y: 0, w: 6, h: 3, minH: 3 },
+    { i: "bezorg-rate20-card", x: 0, y: 3, w: 6, h: 3, minH: 3 },
+    { i: "bezorg-otd-card", x: 0, y: 6, w: 6, h: 3, minH: 3 },
+    { i: "bezorg-maketime-card", x: 0, y: 9, w: 6, h: 3, minH: 3 },
+    { i: "bezorg-drivetime-card", x: 0, y: 12, w: 6, h: 3, minH: 3 },
+    { i: "bezorg-orders-per-run-card", x: 0, y: 15, w: 6, h: 3, minH: 3 },
+    // Charts
+    { i: "delivery-rate-chart", x: 0, y: 18, w: 6, h: 5, minH: 4 },
+    { i: "time-breakdown-chart", x: 0, y: 23, w: 6, h: 5, minH: 4 },
+    { i: "postcode-map", x: 0, y: 28, w: 6, h: 5, minH: 4 },
+    { i: "postcode-table", x: 0, y: 33, w: 6, h: 5, minH: 4 },
   ],
 };
 

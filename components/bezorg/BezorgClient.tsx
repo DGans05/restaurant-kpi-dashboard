@@ -5,7 +5,12 @@ import { useRouter, usePathname } from "next/navigation";
 import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
 import { RestaurantFilter } from "@/components/dashboard/RestaurantFilter";
 import { DashboardViewToggle } from "@/components/dashboard/DashboardViewToggle";
-import { BezorgSummaryCards } from "@/components/bezorg/BezorgSummaryCards";
+import { BezorgRate30Card } from "@/components/bezorg/BezorgRate30Card";
+import { BezorgRate20Card } from "@/components/bezorg/BezorgRate20Card";
+import { BezorgOTDCard } from "@/components/bezorg/BezorgOTDCard";
+import { BezorgMakeTimeCard } from "@/components/bezorg/BezorgMakeTimeCard";
+import { BezorgDriveTimeCard } from "@/components/bezorg/BezorgDriveTimeCard";
+import { BezorgOrdersPerRunCard } from "@/components/bezorg/BezorgOrdersPerRunCard";
 import { DeliveryRateChart } from "@/components/bezorg/DeliveryRateChart";
 import { TimeBreakdownChart } from "@/components/bezorg/TimeBreakdownChart";
 import { PostcodeTable } from "@/components/bezorg/PostcodeTable";
@@ -84,15 +89,40 @@ export function BezorgClient({
   const widgets = useMemo(
     () => [
       {
-        id: "bezorg-cards",
-        label: "Bezorg Cards",
+        id: "bezorg-rate30-card",
+        label: "Bezorgd < 30 min",
+        node: <BezorgRate30Card summary={summary} />,
+      },
+      {
+        id: "bezorg-rate20-card",
+        label: "Bezorgd < 20 min",
+        node: <BezorgRate20Card summary={summary} />,
+      },
+      {
+        id: "bezorg-otd-card",
+        label: "OTD",
         node: (
-          <BezorgSummaryCards
+          <BezorgOTDCard
             summary={summary}
             longestWaitTimes={modalOrders}
             currentMonth={currentMonth}
           />
         ),
+      },
+      {
+        id: "bezorg-maketime-card",
+        label: "Maaktijd",
+        node: <BezorgMakeTimeCard summary={summary} />,
+      },
+      {
+        id: "bezorg-drivetime-card",
+        label: "Rijtijd",
+        node: <BezorgDriveTimeCard summary={summary} />,
+      },
+      {
+        id: "bezorg-orders-per-run-card",
+        label: "Orders / rit",
+        node: <BezorgOrdersPerRunCard summary={summary} />,
       },
       {
         id: "delivery-rate-chart",
