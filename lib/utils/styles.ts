@@ -1,14 +1,17 @@
 import type { CSSProperties } from "react";
 
 export const cardStyles =
-  "rounded-2xl bg-card p-6 shadow-[0_24px_38px_rgba(0,0,0,0.04),0_9px_46px_rgba(0,0,0,0.03),0_11px_15px_rgba(0,0,0,0.05)] dark:shadow-none dark:border dark:border-border";
+  "rounded-[20px] bg-[#FFF6E9] p-6 border border-[rgba(29,37,50,0.12)]";
+
+export const panelStyles =
+  "rounded-[20px] bg-[#FFF6E9] border border-[rgba(29,37,50,0.12)]";
 
 export const tooltipContentStyle: CSSProperties = {
-  backgroundColor: "var(--card)",
-  border: "1px solid var(--border)",
+  backgroundColor: "#FFF6E9",
+  border: "1px solid rgba(29,37,50,0.12)",
   borderRadius: "16px",
-  color: "var(--foreground)",
+  color: "#1D2532",
   fontSize: "12px",
   padding: "12px 16px",
-  boxShadow: "0 8px 16px rgba(0,0,0,0.12)",
+  boxShadow: "0 8px 16px rgba(0,0,0,0.15)",
 };

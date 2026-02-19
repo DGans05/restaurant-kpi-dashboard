@@ -1,24 +1,18 @@
 import type { Metadata } from "next";
-import { Poppins, Bebas_Neue, Inter } from "next/font/google";
+import { Arvo, Inria_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import "./globals.css";
 
-const poppins = Poppins({
-  variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const bebasNeue = Bebas_Neue({
+const arvo = Arvo({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400"],
+  weight: ["700"],
 });
 
-const inter = Inter({
+const inriaSans = Inria_Sans({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -32,11 +26,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${poppins.variable} ${bebasNeue.variable} ${inter.variable} font-sans antialiased`}
-      >
-        <ThemeProvider>{children}</ThemeProvider>
+    <html lang="en">
+      <body className={`${arvo.variable} ${inriaSans.variable} font-sans antialiased`}>
+<ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

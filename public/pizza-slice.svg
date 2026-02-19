@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 180" fill="none">
+
+  <!-- ── Main slice body (outer silhouette) ── -->
+  <path d="
+    M 24 148
+    C 16 140 16 128 22 120
+    L 148 10
+    Q 154 4 166 4
+    Q 180 3 193 14
+    Q 208 26 210 46
+    Q 213 65 205 80
+    Q 200 90 192 95
+    L 178 148
+    Q 172 158 160 160
+    L 118 162
+    Q 82 163 55 155
+    Q 36 150 24 148 Z"
+    fill="white" stroke="black" stroke-width="6.5" stroke-linejoin="round" stroke-linecap="round"/>
+
+  <!-- ── Crust outer arc ── -->
+  <path d="M 150 8 Q 170 0 190 12 Q 210 24 212 50 Q 214 68 204 82"
+    fill="none" stroke="black" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- ── Crust inner contour line ── -->
+  <path d="M 154 16 Q 170 10 186 18 Q 202 28 204 50 Q 206 64 198 76"
+    fill="none" stroke="black" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- ── Right visible side/edge of slice ── -->
+  <path d="M 200 84 Q 195 92 182 145 Q 178 155 166 158"
+    fill="none" stroke="black" stroke-width="5.5" stroke-linecap="round"/>
+
+  <!-- ── Cheese drip base (flat ledge) ── -->
+  <path d="M 62 152 Q 95 163 140 158"
+    fill="none" stroke="black" stroke-width="5.5" stroke-linecap="round"/>
+
+  <!-- ── Cheese drip 1 (left) ── -->
+  <path d="M 85 160 Q 80 170 82 177 Q 86 183 93 179 Q 100 173 98 162"
+    fill="white" stroke="black" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- ── Cheese drip 2 (right) ── -->
+  <path d="M 112 161 Q 110 172 113 178 Q 118 184 125 179 Q 132 172 130 161"
+    fill="white" stroke="black" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- ── Right cheese blob ── -->
+  <path d="M 188 92 Q 198 88 204 94 Q 212 102 206 112 Q 200 120 190 116 Q 182 112 182 102 Q 182 96 188 92 Z"
+    fill="white" stroke="black" stroke-width="5" stroke-linejoin="round"/>
+
+  <!-- ══════════════════════════════════ -->
+  <!-- ── Large toppings (5 ovals) ──  -->
+  <!-- ══════════════════════════════════ -->
+
+  <!-- Topping 1: near tip -->
+  <ellipse cx="70" cy="122" rx="12" ry="5.5" transform="rotate(-36 70 122)"
+    fill="white" stroke="black" stroke-width="3.5"/>
+
+  <!-- Topping 2: mid-low -->
+  <ellipse cx="96" cy="103" rx="14" ry="6" transform="rotate(-36 96 103)"
+    fill="white" stroke="black" stroke-width="3.5"/>
+
+  <!-- Topping 3: mid-center -->
+  <ellipse cx="120" cy="86" rx="15" ry="6.5" transform="rotate(-36 120 86)"
+    fill="white" stroke="black" stroke-width="3.5"/>
+
+  <!-- Topping 4: mid-right -->
+  <ellipse cx="144" cy="68" rx="14" ry="6" transform="rotate(-36 144 68)"
+    fill="white" stroke="black" stroke-width="3.5"/>
+
+  <!-- Topping 5: upper right -->
+  <ellipse cx="164" cy="50" rx="12" ry="5.5" transform="rotate(-36 164 50)"
+    fill="white" stroke="black" stroke-width="3.5"/>
+
+  <!-- ══════════════════════════════════ -->
+  <!-- ── Small oval holes (bubbles) ── -->
+  <!-- ══════════════════════════════════ -->
+
+  <ellipse cx="57" cy="134" rx="5.5" ry="2.5" transform="rotate(-36 57 134)"
+    fill="white" stroke="black" stroke-width="2.5"/>
+  <ellipse cx="84" cy="114" rx="5.5" ry="2.5" transform="rotate(-36 84 114)"
+    fill="white" stroke="black" stroke-width="2.5"/>
+  <ellipse cx="108" cy="95" rx="5.5" ry="2.5" transform="rotate(-36 108 95)"
+    fill="white" stroke="black" stroke-width="2.5"/>
+  <ellipse cx="132" cy="77" rx="5" ry="2.5" transform="rotate(-36 132 77)"
+    fill="white" stroke="black" stroke-width="2.5"/>
+  <ellipse cx="152" cy="58" rx="5" ry="2.5" transform="rotate(-36 152 58)"
+    fill="white" stroke="black" stroke-width="2.5"/>
+  <ellipse cx="170" cy="40" rx="4.5" ry="2" transform="rotate(-36 170 40)"
+    fill="white" stroke="black" stroke-width="2"/>
+
+  <!-- ══════════════════════════════ -->
+  <!-- ── Scattered dots ──          -->
+  <!-- ══════════════════════════════ -->
+
+  <circle cx="48" cy="140" r="2"  fill="black"/>
+  <circle cx="62" cy="144" r="1.5" fill="black"/>
+  <circle cx="40" cy="130" r="1.5" fill="black"/>
+  <circle cx="60" cy="128" r="2"  fill="black"/>
+  <circle cx="73" cy="136" r="1.5" fill="black"/>
+  <circle cx="75" cy="110" r="2"  fill="black"/>
+  <circle cx="88" cy="125" r="1.5" fill="black"/>
+  <circle cx="100" cy="116" r="1.5" fill="black"/>
+  <circle cx="90" cy="106" r="2"  fill="black"/>
+  <circle cx="108" cy="108" r="1.5" fill="black"/>
+  <circle cx="116" cy="98" r="2"  fill="black"/>
+  <circle cx="103" cy="82" r="1.5" fill="black"/>
+  <circle cx="128" cy="90" r="1.5" fill="black"/>
+  <circle cx="136" cy="82" r="2"  fill="black"/>
+  <circle cx="126" cy="65" r="1.5" fill="black"/>
+  <circle cx="148" cy="78" r="1.5" fill="black"/>
+  <circle cx="154" cy="66" r="2"  fill="black"/>
+  <circle cx="142" cy="53" r="1.5" fill="black"/>
+  <circle cx="162" cy="62" r="1.5" fill="black"/>
+  <circle cx="170" cy="52" r="1.5" fill="black"/>
+  <circle cx="162" cy="36" r="2"  fill="black"/>
+  <circle cx="174" cy="28" r="1.5" fill="black"/>
+  <circle cx="180" cy="38" r="1.5" fill="black"/>
+
+</svg>
