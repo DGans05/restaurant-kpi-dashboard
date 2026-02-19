@@ -18,10 +18,14 @@ import { cardStyles, tooltipContentStyle } from "@/lib/utils/styles";
 
 interface WorkedHoursChartProps {
   data: WorkedHoursDataPoint[];
+  embedded?: boolean;
 }
 
-export function WorkedHoursChart({ data }: WorkedHoursChartProps) {
+export function WorkedHoursChart({ data, embedded = false }: WorkedHoursChartProps) {
   if (data.length === 0) {
+    if (embedded) {
+      return <p className="text-sm text-muted-foreground">Geen data beschikbaar</p>;
+    }
     return (
       <div className={cardStyles}>
         <h3 className="text-2xl font-display">GEWERKTE UREN</h3>
@@ -30,19 +34,8 @@ export function WorkedHoursChart({ data }: WorkedHoursChartProps) {
     );
   }
 
-  return (
-    <div className={`animate-fade-up animate-lift stagger-7 ${cardStyles}`}>
-      <div className="mb-6 flex items-baseline justify-between">
-        <div>
-          <h3 className="text-2xl font-display text-foreground">
-            GEWERKTE UREN
-          </h3>
-          <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground font-medium">
-            Dagelijkse uren &amp; productiviteit (€/uur)
-          </p>
-        </div>
-      </div>
-      <ResponsiveContainer width="100%" height={280} className="touch-manipulation">
+  const chart = (
+    <ResponsiveContainer width="100%" height={embedded ? 260 : 280} className="touch-manipulation">
         <ComposedChart data={data}>
           <CartesianGrid
             strokeDasharray="3 3"
@@ -104,6 +97,31 @@ export function WorkedHoursChart({ data }: WorkedHoursChartProps) {
           />
         </ComposedChart>
       </ResponsiveContainer>
+  );
+
+  if (embedded) {
+    return (
+      <div>
+        <h3 className="font-display font-bold text-[18px] text-[#1D2532] mb-1">GEWERKTE UREN</h3>
+        <p className="mb-4 text-[12px] font-sans uppercase tracking-[0.6px] text-[#6B6B6B]">
+          Dagelijkse uren &amp; productiviteit (€/uur)
+        </p>
+        {chart}
+      </div>
+    );
+  }
+
+  return (
+    <div className={`animate-fade-up animate-lift stagger-7 ${cardStyles}`}>
+      <div className="mb-6 flex items-baseline justify-between">
+        <div>
+          <h3 className="font-display font-bold text-[18px] text-[#1D2532]">GEWERKTE UREN</h3>
+          <p className="mt-1 text-[12px] font-sans uppercase tracking-[0.6px] text-[#6B6B6B]">
+            Dagelijkse uren &amp; productiviteit (€/uur)
+          </p>
+        </div>
+      </div>
+      {chart}
     </div>
   );
 }

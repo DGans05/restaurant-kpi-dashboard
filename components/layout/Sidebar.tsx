@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Menu,
   X,
-  Flame,
   Store,
   FileBarChart,
   PenSquare,
@@ -51,13 +50,11 @@ export function Sidebar() {
         return;
       }
 
-      // Fetch all profiles for this user (they may have access to multiple restaurants)
       const { data: profiles } = await supabase
         .from('user_profiles')
         .select('is_admin')
         .eq('user_id', user.id);
 
-      // User is admin if ANY of their profiles has is_admin = true
       const isAdminUser = profiles?.some(p => p.is_admin) || false;
       setIsAdmin(isAdminUser);
       setLoading(false);
@@ -73,11 +70,8 @@ export function Sidebar() {
     router.refresh();
   };
 
-  // Filter menu items based on admin status
   const visibleMenuItems = menuItems.filter(item => {
-    if (item.adminOnly) {
-      return isAdmin;
-    }
+    if (item.adminOnly) return isAdmin;
     return true;
   });
 
@@ -110,19 +104,27 @@ export function Sidebar() {
         )}
       >
         {/* Brand */}
-        <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-5">
+        <div className="flex items-center justify-between border-b border-sidebar-border px-5 py-4">
           <Link
             href="/dashboard"
-            className="flex items-center gap-2.5"
+            className="flex items-center gap-3"
             onClick={() => setOpen(false)}
           >
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary">
-              <Flame className="size-5 text-white" />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/pizza-slice.svg"
+              alt="NYP KPI"
+              width={40}
+              height={40}
+              className="shrink-0 object-contain"
+            />
             <div>
-              <span className="text-lg font-display text-sidebar-foreground">
+              <p className="font-display font-bold text-[22px] leading-none tracking-[-0.03em] text-[#1D2532]">
                 NYP KPI
-              </span>
+              </p>
+              <p className="mt-1 text-[10px] font-sans font-normal uppercase tracking-[0.12em] text-[#6B6B6B]">
+                Restaurant Dashboard
+              </p>
             </div>
           </Link>
           <Button
@@ -149,16 +151,16 @@ export function Sidebar() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  "group flex items-center gap-3 rounded-[5px] px-3 py-2.5 text-sm font-medium transition-all duration-200",
                   isActive
-                    ? "bg-primary text-white shadow-[0_4px_8px_rgba(0,154,68,0.2)]"
+                    ? "bg-[#00311F] text-[#FFF6E9]"
                     : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 )}
               >
                 <item.icon
                   className={cn(
                     "size-[18px] transition-colors",
-                    isActive ? "text-white" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+                    isActive ? "text-[#FFF6E9]" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
                   )}
                 />
                 {item.label}
@@ -168,11 +170,11 @@ export function Sidebar() {
         </nav>
 
         {/* Footer with Logout */}
-        <div className="border-t border-sidebar-border px-3 py-4 space-y-3">
+        <div className="border-t border-sidebar-border px-3 py-4">
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-primary hover:bg-sidebar-accent transition-all duration-200"
+            className="flex w-full items-center gap-3 rounded-[5px] px-3 py-2.5 text-sm font-medium text-primary hover:bg-sidebar-accent transition-all duration-200"
           >
             <LogOut className="size-[18px]" />
             Logout

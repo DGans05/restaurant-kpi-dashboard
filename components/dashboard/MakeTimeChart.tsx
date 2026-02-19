@@ -17,10 +17,14 @@ import { cardStyles, tooltipContentStyle } from "@/lib/utils/styles";
 
 interface MakeTimeChartProps {
   data: MakeTimeDataPoint[];
+  embedded?: boolean;
 }
 
-export function MakeTimeChart({ data }: MakeTimeChartProps) {
+export function MakeTimeChart({ data, embedded = false }: MakeTimeChartProps) {
   if (data.length === 0) {
+    if (embedded) {
+      return <p className="text-sm text-muted-foreground">Geen data beschikbaar</p>;
+    }
     return (
       <div className={cardStyles}>
         <h3 className="text-2xl font-display">MAAK- & RIJTIJD</h3>
@@ -29,19 +33,8 @@ export function MakeTimeChart({ data }: MakeTimeChartProps) {
     );
   }
 
-  return (
-    <div className={`animate-fade-up animate-lift stagger-8 ${cardStyles}`}>
-      <div className="mb-6 flex items-baseline justify-between">
-        <div>
-          <h3 className="text-2xl font-display text-foreground">
-            MAAK- &amp; RIJTIJD
-          </h3>
-          <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground font-medium">
-            Dagelijkse maaktijd, rijtijd &amp; OTD (minuten)
-          </p>
-        </div>
-      </div>
-      <ResponsiveContainer width="100%" height={280} className="touch-manipulation">
+  const chart = (
+    <ResponsiveContainer width="100%" height={embedded ? 260 : 280} className="touch-manipulation">
         <ComposedChart data={data}>
           <CartesianGrid
             strokeDasharray="3 3"
@@ -103,6 +96,31 @@ export function MakeTimeChart({ data }: MakeTimeChartProps) {
           />
         </ComposedChart>
       </ResponsiveContainer>
+  );
+
+  if (embedded) {
+    return (
+      <div>
+        <h3 className="font-display font-bold text-[18px] text-[#1D2532] mb-1">MAAK- &amp; RIJTIJD</h3>
+        <p className="mb-4 text-[12px] font-sans uppercase tracking-[0.6px] text-[#6B6B6B]">
+          Dagelijkse maaktijd, rijtijd &amp; OTD (minuten)
+        </p>
+        {chart}
+      </div>
+    );
+  }
+
+  return (
+    <div className={`animate-fade-up animate-lift stagger-8 ${cardStyles}`}>
+      <div className="mb-6 flex items-baseline justify-between">
+        <div>
+          <h3 className="font-display font-bold text-[18px] text-[#1D2532]">MAAK- &amp; RIJTIJD</h3>
+          <p className="mt-1 text-[12px] font-sans uppercase tracking-[0.6px] text-[#6B6B6B]">
+            Dagelijkse maaktijd, rijtijd &amp; OTD (minuten)
+          </p>
+        </div>
+      </div>
+      {chart}
     </div>
   );
 }
