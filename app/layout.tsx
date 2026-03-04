@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Arvo, Inria_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const arvo = Arvo({
@@ -29,6 +30,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${arvo.variable} ${inriaSans.variable} font-sans antialiased`}>
 <ThemeProvider>{children}</ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
